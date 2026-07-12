@@ -1,0 +1,2661 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L'Atelier - Haute Couture & Tailoring</title>
+  
+  <!-- SEO & Description -->
+  <meta name="description" content="Système de gestion et de suivi de commandes pour atelier de couture haut de gamme. Suivi client, mesures de tailleur, facturation et gestion de stock intégrée.">
+  
+  <!-- Google Fonts: Elegant Serif (Cormorant Garamond), Clean Sans (Inter) and Monospace (JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind Config Customizations -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            charcoal: {
+              light: '#2a2a2a',
+              DEFAULT: '#1c1c1c',
+              dark: '#111111',
+            },
+            cream: {
+              light: '#fdfbf7',
+              DEFAULT: '#f9f6ed',
+              dark: '#ece6d2',
+            },
+            brass: {
+              light: '#d9b66c',
+              DEFAULT: '#c5a059',
+              dark: '#a6823e',
+            },
+            bordeaux: {
+              light: '#a13b48',
+              DEFAULT: '#8b2635',
+              dark: '#681c26',
+            },
+            sage: {
+              light: '#9cb098',
+              DEFAULT: '#7a8d75',
+              dark: '#5b6b57',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom Core Styles -->
+  <style>
+    /* Custom Scrollbar for vintage style */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #111111;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c5a059;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d9b66c;
+    }
+
+    /* Sewing stitch border effect */
+    .stitch-border {
+      border: 2px dashed #c5a059;
+      position: relative;
+    }
+    .stitch-border::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      bottom: 2px;
+      border: 1px solid rgba(197, 160, 89, 0.15);
+      pointer-events: none;
+    }
+
+    /* Paper texture for fiches */
+    .paper-texture {
+      background-image: radial-gradient(rgba(197, 160, 89, 0.03) 1px, transparent 0), radial-gradient(rgba(197, 160, 89, 0.03) 1px, transparent 0);
+      background-size: 8px 8px;
+      background-position: 0 0, 4px 4px;
+    }
+
+    /* Measuring tape graduation ticks animation / details */
+    .tape-ticks-container {
+      background-color: #ffd700;
+      color: #000;
+    }
+
+    /* Print styling for tailor invoice receipt */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+
+  <!-- React 18 & ReactDOM via CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel compiler to compile JSX live in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="h-full bg-charcoal text-white font-sans antialiased overflow-hidden">
+  <div id="root" class="h-full"></div>
+
+  <!-- React Application Core Logic -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- MOCK / INITIAL STATE DATA ---
+    const defaultData = {
+      config: {
+        nomAtelier: "Maison d'Aiguille d'Or",
+        devise: "€"
+      },
+      employees: [
+        { id: "emp_1", name: "Henri Laurent", role: "Maître Tailleur" },
+        { id: "emp_2", name: "Antoine Varin", role: "Coupeur Principal" },
+        { id: "emp_3", name: "Clara Bonnet", role: "Couturière Senior" }
+      ],
+      clients: [
+        {
+          id: "cli_1",
+          name: "Jean-Pierre Chevalier",
+          phone: "+33 6 12 34 56 78",
+          notes: "Demande toujours des poches secrètes à l'intérieur de la veste pour son carnet. Préfère les coupes cintrées napolitaines. Sensible à la laine rugueuse, préférer le cachemire ou la laine super 150s doublée soie.",
+          measurements: {
+            poitrine: 104,
+            taille: 94,
+            hanches: 106,
+            epaules: 48,
+            manches: 64,
+            longueurPantalon: 102,
+            entrejambe: 78,
+            cou: 42,
+            hauteurBuste: 45,
+            poignet: 18
+          }
+        },
+        {
+          id: "cli_2",
+          name: "Éléonore de Montaigne",
+          phone: "+33 7 98 76 54 32",
+          notes: "Garnitures et dentelles discrètes. Préfère la soie lourde et le velours de coton. Prévoir un essayage intermédiaire supplémentaire pour l'ajustement du corset sur la robe de bal.",
+          measurements: {
+            poitrine: 92,
+            taille: 68,
+            hanches: 96,
+            epaules: 40,
+            manches: 58,
+            longueurPantalon: 108,
+            entrejambe: 82,
+            cou: 36,
+            hauteurBuste: 42,
+            poignet: 15
+          }
+        },
+        {
+          id: "cli_3",
+          name: "Marc Lemaire",
+          phone: "+33 6 55 99 88 11",
+          notes: "Carrure athlétique, ajustement nécessaire aux cuisses pour les pantalons. Souhaite des boutons de manchette fonctionnels (boutonnières ouvertes sur la manche).",
+          measurements: {
+            poitrine: 112,
+            taille: 88,
+            hanches: 102,
+            epaules: 51,
+            manches: 66,
+            longueurPantalon: 105,
+            entrejambe: 80,
+            cou: 44,
+            hauteurBuste: 47,
+            poignet: 19
+          }
+        }
+      ],
+      orders: [
+        {
+          id: "ord_1",
+          clientId: "cli_1",
+          description: "Costume trois pièces en Tweed de laine écossaise brune",
+          status: "En coupe",
+          dateOrdered: "2026-07-02",
+          dateDelivery: "2026-07-28",
+          price: 1850,
+          advance: 600,
+          assignedTo: "emp_1",
+          notes: "Boutons en corne véritable. Doublure soie brun doré."
+        },
+        {
+          id: "ord_2",
+          clientId: "cli_2",
+          description: "Robe d'essayage en soie lourde avec traîne sauge",
+          status: "En couture",
+          dateOrdered: "2026-06-25",
+          dateDelivery: "2026-07-20",
+          price: 2400,
+          advance: 1000,
+          assignedTo: "emp_3",
+          notes: "Fil sauge assorti requis. Ajustement de la taille lors de l'essayage."
+        },
+        {
+          id: "ord_3",
+          clientId: "cli_3",
+          description: "Manteau croisé en cachemire noir d'hiver",
+          status: "Nouvelle",
+          dateOrdered: "2026-07-10",
+          dateDelivery: "2026-08-15",
+          price: 2100,
+          advance: 700,
+          assignedTo: "emp_2",
+          notes: "Grand col tailleur, double boutonnage laiton."
+        },
+        {
+          id: "ord_4",
+          clientId: "cli_1",
+          description: "Gilet en lin crème d'été décontracté",
+          status: "Livrée",
+          dateOrdered: "2026-06-10",
+          dateDelivery: "2026-07-05",
+          price: 450,
+          advance: 450,
+          assignedTo: "emp_3",
+          notes: "Boutons en bois d'olivier. Livré en main propre au client."
+        }
+      ],
+      stock: [
+        {
+          id: "stk_1",
+          name: "Tweed de laine écossaise (Brun)",
+          type: "Tissu",
+          quantity: 12,
+          unit: "mètres",
+          alertThreshold: 4
+        },
+        {
+          id: "stk_2",
+          name: "Soie de Lyon (Crème)",
+          type: "Tissu",
+          quantity: 3,
+          unit: "mètres",
+          alertThreshold: 5
+        },
+        {
+          id: "stk_3",
+          name: "Cachemire pur d'Italie (Noir)",
+          type: "Tissu",
+          quantity: 15,
+          unit: "mètres",
+          alertThreshold: 6
+        },
+        {
+          id: "stk_4",
+          name: "Boutons en corne véritable 15mm",
+          type: "Fourniture",
+          quantity: 120,
+          unit: "pièces",
+          alertThreshold: 40
+        },
+        {
+          id: "stk_5",
+          name: "Boutons en laiton brossé 20mm",
+          type: "Fourniture",
+          quantity: 12,
+          unit: "pièces",
+          alertThreshold: 24
+        },
+        {
+          id: "stk_6",
+          name: "Fil haute résistance Gutermann (Noir)",
+          type: "Fourniture",
+          quantity: 8,
+          unit: "bobines",
+          alertThreshold: 10
+        }
+      ]
+    };
+
+    // --- REUSABLE SVG ICONS COMPONENT ---
+    const Icon = ({ name, className = "w-5 h-5", strokeWidth = 2 }) => {
+      const icons = {
+        dashboard: (
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10" />
+        ),
+        clients: (
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75" />
+        ),
+        orders: (
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" />
+        ),
+        billing: (
+          <path d="M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        ),
+        stock: (
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        ),
+        settings: (
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+        ),
+        plus: (
+          <path d="M12 5v14M5 12h14" />
+        ),
+        edit: (
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z" />
+        ),
+        trash: (
+          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6M14 11v6" />
+        ),
+        alert: (
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z M12 9v4M12 17h.01" />
+        ),
+        check: (
+          <path d="M20 6L9 17l-5-5" />
+        ),
+        user: (
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+        ),
+        phone: (
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+        ),
+        ruler: (
+          <path d="M21.3 8.11l-5.4-5.4a1 1 0 0 0-1.4 0L2.3 14.91a1 1 0 0 0 0 1.4l5.4 5.4a1 1 0 0 0 1.4 0L21.3 9.51a1 1 0 0 0 0-1.4z M13 6l2 2 M10 9l2 2 M7 12l2 2" />
+        ),
+        scissors: (
+          <path d="M6 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 0l6 4M18 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-12 8l12-16M18 20l-6-4" />
+        ),
+        close: (
+          <path d="M18 6L6 18M6 6l12 12" />
+        ),
+        info: (
+          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 16v-4M12 8h.01" />
+        ),
+        download: (
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+        ),
+        upload: (
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+        ),
+        chevronRight: (
+          <path d="M9 18l6-6-6-6" />
+        ),
+        print: (
+          <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+        )
+      };
+
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          {icons[name] || <circle cx="12" cy="12" r="10" />}
+        </svg>
+      );
+    };
+
+    // --- MAIN APP COMPONENT ---
+    function App() {
+      // Load initially from localstorage or use default mock data
+      const [data, setData] = useState(() => {
+        const saved = localStorage.getItem("atelier_couture_data");
+        if (saved) {
+          try {
+            return JSON.parse(saved);
+          } catch (e) {
+            console.error("Erreur lors de la lecture des données locales", e);
+          }
+        }
+        return defaultData;
+      });
+
+      // Active module tab: dashboard, clients, orders, billing, stock, settings
+      const [activeTab, setActiveTab] = useState("dashboard");
+
+      // Active employee session (simulated login "Je suis...")
+      const [currentEmployeeId, setCurrentEmployeeId] = useState(() => {
+        return data.employees.length > 0 ? data.employees[0].id : "";
+      });
+
+      // System notification banner (toast)
+      const [notification, setNotification] = useState(null);
+
+      // Search filters & select states
+      const [clientSearch, setClientSearch] = useState("");
+      const [selectedClientId, setSelectedClientId] = useState(null);
+      const [stockFilter, setStockFilter] = useState("All");
+
+      // Order status filter
+      const [orderFilter, setOrderFilter] = useState("All");
+
+      // Modals triggers
+      const [modalType, setModalType] = useState(null); // 'client', 'order', 'stock', 'employee'
+      const [editItem, setEditItem] = useState(null); // Item to edit
+
+      // Active client filter in orders creation
+      const [activeOrderView, setActiveOrderView] = useState(null); // To view/print order invoice details
+
+      // Sync state to localStorage automatically on modification
+      useEffect(() => {
+        localStorage.setItem("atelier_couture_data", JSON.stringify(data));
+      }, [data]);
+
+      // Automatically clear toast notifications after 4s
+      useEffect(() => {
+        if (notification) {
+          const timer = setTimeout(() => setNotification(null), 4000);
+          return () => clearTimeout(timer);
+        }
+      }, [notification]);
+
+      const triggerNotification = (message, type = "success") => {
+        setNotification({ message, type });
+      };
+
+      const currentEmployee = data.employees.find(e => e.id === currentEmployeeId) || { name: "Visiteur", role: "Inconnu" };
+
+      // Helper methods for calculations
+      const revenueStats = useMemo(() => {
+        const totalRevenue = data.orders.reduce((sum, o) => sum + (o.price || 0), 0);
+        const totalAdvance = data.orders.reduce((sum, o) => sum + (o.advance || 0), 0);
+        const activeOrders = data.orders.filter(o => o.status !== "Livrée").length;
+        const totalRemaining = totalRevenue - totalAdvance;
+        
+        // Low Stock Count
+        const lowStockCount = data.stock.filter(item => item.quantity <= item.alertThreshold).length;
+
+        return {
+          totalRevenue,
+          totalAdvance,
+          totalRemaining,
+          activeOrders,
+          lowStockCount
+        };
+      }, [data.orders, data.stock]);
+
+      // --- HANDLERS ---
+
+      // Employee switching
+      const handleEmployeeChange = (id) => {
+        setCurrentEmployeeId(id);
+        const emp = data.employees.find(e => e.id === id);
+        if (emp) {
+          triggerNotification(`Connecté en tant que ${emp.name} (${emp.role})`, "info");
+        }
+      };
+
+      // CRUD Clients
+      const saveClient = (clientInput) => {
+        if (clientInput.id) {
+          // Edit
+          setData(prev => ({
+            ...prev,
+            clients: prev.clients.map(c => c.id === clientInput.id ? { ...c, ...clientInput } : c)
+          }));
+          triggerNotification(`Fiche client de ${clientInput.name} mise à jour`);
+        } else {
+          // Add
+          const newId = `cli_${Date.now()}`;
+          const newClient = {
+            ...clientInput,
+            id: newId,
+            measurements: clientInput.measurements || {
+              poitrine: 0, taille: 0, hanches: 0, epaules: 0, sleeves: 0,
+              manches: 0, longueurPantalon: 0, entrejambe: 0, cou: 0, hauteurBuste: 0, poignet: 0
+            }
+          };
+          setData(prev => ({
+            ...prev,
+            clients: [...prev.clients, newClient]
+          }));
+          setSelectedClientId(newId);
+          triggerNotification(`Nouveau client ${clientInput.name} ajouté`);
+        }
+        setModalType(null);
+        setEditItem(null);
+      };
+
+      const deleteClient = (id) => {
+        const hasOrders = data.orders.some(o => o.clientId === id);
+        if (hasOrders) {
+          triggerNotification("Impossible de supprimer ce client : des commandes y sont rattachées.", "error");
+          return;
+        }
+        
+        const client = data.clients.find(c => c.id === id);
+        if (confirm(`Êtes-vous sûr de vouloir supprimer la fiche client de ${client.name} ?`)) {
+          setData(prev => ({
+            ...prev,
+            clients: prev.clients.filter(c => c.id !== id)
+          }));
+          setSelectedClientId(null);
+          triggerNotification("Client supprimé avec succès");
+        }
+      };
+
+      // CRUD Orders
+      const saveOrder = (orderInput) => {
+        if (orderInput.id) {
+          // Edit
+          setData(prev => ({
+            ...prev,
+            orders: prev.orders.map(o => o.id === orderInput.id ? { ...o, ...orderInput } : o)
+          }));
+          triggerNotification("Commande mise à jour");
+        } else {
+          // Add
+          const newOrder = {
+            ...orderInput,
+            id: `ord_${Date.now()}`,
+            dateOrdered: new Date().toISOString().split('T')[0]
+          };
+          setData(prev => ({
+            ...prev,
+            orders: [newOrder, ...prev.orders]
+          }));
+          triggerNotification("Nouvelle commande créée avec succès");
+        }
+        setModalType(null);
+        setEditItem(null);
+      };
+
+      const updateOrderStatus = (orderId, newStatus) => {
+        setData(prev => ({
+          ...prev,
+          orders: prev.orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
+        }));
+        triggerNotification(`Commande passée au statut : ${newStatus}`);
+      };
+
+      const deleteOrder = (id) => {
+        if (confirm("Voulez-vous vraiment supprimer cette commande ?")) {
+          setData(prev => ({
+            ...prev,
+            orders: prev.orders.filter(o => o.id !== id)
+          }));
+          triggerNotification("Commande supprimée", "error");
+        }
+      };
+
+      // CRUD Stock
+      const saveStockItem = (stockInput) => {
+        if (stockInput.id) {
+          setData(prev => ({
+            ...prev,
+            stock: prev.stock.map(s => s.id === stockInput.id ? { ...s, ...stockInput } : s)
+          }));
+          triggerNotification(`Article de stock "${stockInput.name}" mis à jour`);
+        } else {
+          setData(prev => ({
+            ...prev,
+            stock: [...prev.stock, { ...stockInput, id: `stk_${Date.now()}` }]
+          }));
+          triggerNotification(`Nouvel article de stock "${stockInput.name}" ajouté`);
+        }
+        setModalType(null);
+        setEditItem(null);
+      };
+
+      const adjustStockQuantity = (id, delta) => {
+        setData(prev => ({
+          ...prev,
+          stock: prev.stock.map(s => {
+            if (s.id === id) {
+              const newQty = Math.max(0, s.quantity + delta);
+              // Trigger low stock warning toast if it drops below threshold
+              if (newQty <= s.alertThreshold && s.quantity > s.alertThreshold) {
+                triggerNotification(`Alerte : Le stock de ${s.name} est bas !`, "error");
+              }
+              return { ...s, quantity: newQty };
+            }
+            return s;
+          })
+        }));
+      };
+
+      const deleteStockItem = (id) => {
+        if (confirm("Supprimer cet article du stock ?")) {
+          setData(prev => ({
+            ...prev,
+            stock: prev.stock.filter(s => s.id !== id)
+          }));
+          triggerNotification("Article supprimé du stock", "error");
+        }
+      };
+
+      // Configuration / Employees management
+      const saveEmployee = (empInput) => {
+        if (empInput.id) {
+          setData(prev => ({
+            ...prev,
+            employees: prev.employees.map(e => e.id === empInput.id ? { ...e, ...empInput } : e)
+          }));
+          triggerNotification("Profil employé mis à jour");
+        } else {
+          const newEmp = { ...empInput, id: `emp_${Date.now()}` };
+          setData(prev => ({
+            ...prev,
+            employees: [...prev.employees, newEmp]
+          }));
+          triggerNotification(`Nouvel employé "${empInput.name}" ajouté`);
+        }
+        setModalType(null);
+        setEditItem(null);
+      };
+
+      const deleteEmployee = (id) => {
+        if (data.employees.length <= 1) {
+          triggerNotification("L'atelier doit conserver au moins un employé.", "error");
+          return;
+        }
+        const hasOrders = data.orders.some(o => o.assignedTo === id);
+        if (hasOrders) {
+          triggerNotification("Impossible de supprimer cet employé : des commandes lui sont assignées.", "error");
+          return;
+        }
+
+        if (confirm("Voulez-vous vraiment retirer cet employé de l'atelier ?")) {
+          setData(prev => ({
+            ...prev,
+            employees: prev.employees.filter(e => e.id !== id)
+          }));
+          if (currentEmployeeId === id) {
+            const remaining = data.employees.filter(e => e.id !== id);
+            setCurrentEmployeeId(remaining[0].id);
+          }
+          triggerNotification("Employé retiré", "error");
+        }
+      };
+
+      const updateWorkshopConfig = (field, value) => {
+        setData(prev => ({
+          ...prev,
+          config: {
+            ...prev.config,
+            [field]: value
+          }
+        }));
+        triggerNotification("Configuration de l'atelier enregistrée");
+      };
+
+      // Import / Export JSON DB
+      const exportDatabase = () => {
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `atelier_database_${new Date().toISOString().split('T')[0]}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        triggerNotification("Base de données exportée avec succès");
+      };
+
+      const importDatabase = (event) => {
+        const fileReader = new FileReader();
+        if (event.target.files && event.target.files.length > 0) {
+          fileReader.readAsText(event.target.files[0], "UTF-8");
+          fileReader.onload = e => {
+            try {
+              const parsed = JSON.parse(e.target.result);
+              if (parsed.clients && parsed.orders && parsed.stock && parsed.employees) {
+                setData(parsed);
+                if (parsed.employees.length > 0) {
+                  setCurrentEmployeeId(parsed.employees[0].id);
+                }
+                triggerNotification("Base de données importée et rechargée avec succès !", "success");
+              } else {
+                triggerNotification("Format de fichier invalide. Les champs requis sont absents.", "error");
+              }
+            } catch (err) {
+              triggerNotification("Erreur de lecture du fichier JSON.", "error");
+            }
+          };
+        }
+      };
+
+      return (
+        <div class="h-full flex overflow-hidden bg-charcoal text-gray-100">
+          
+          {/* TOAST NOTIFICATION BANNER */}
+          {notification && (
+            <div class={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded shadow-lg border animate-slide-in-right ${
+              notification.type === 'error' ? 'bg-bordeaux border-bordeaux-light text-white' :
+              notification.type === 'info' ? 'bg-charcoal-light border-brass text-brass' :
+              'bg-sage border-sage-light text-white'
+            }`}>
+              <Icon name={notification.type === 'error' ? 'alert' : 'info'} className="w-5 h-5" />
+              <span class="font-medium text-sm">{notification.message}</span>
+              <button onClick={() => setNotification(null)} class="text-white opacity-70 hover:opacity-100">
+                <Icon name="close" className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* LEFT NAVIGATION: VINTAGE MEASURING TAPE SIDEBAR */}
+          <aside class="w-64 flex-shrink-0 bg-charcoal-dark flex flex-col justify-between border-r border-charcoal-light relative">
+            <div class="flex-1 flex flex-col pt-6 overflow-y-auto">
+              
+              {/* Workshop Title */}
+              <div class="px-6 mb-8 text-center">
+                <div class="inline-block border-b border-brass pb-2">
+                  <h1 class="font-serif text-2xl tracking-wider text-brass font-bold leading-tight">
+                    {data.config.nomAtelier}
+                  </h1>
+                  <p class="font-mono text-[9px] uppercase tracking-widest text-brass opacity-60 mt-1">
+                    Couturiers & Artisans
+                  </p>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <nav class="px-4 space-y-2">
+                {[
+                  { id: "dashboard", label: "Tableau de bord", icon: "dashboard" },
+                  { id: "clients", label: "Fiches Clients", icon: "clients" },
+                  { id: "orders", label: "Suivi Commandes", icon: "orders" },
+                  { id: "billing", label: "Facturation", icon: "billing" },
+                  { id: "stock", label: "Gestion Stock", icon: "stock" },
+                  { id: "settings", label: "Atelier & Config", icon: "settings" }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setActiveOrderView(null);
+                    }}
+                    class={`w-full flex items-center gap-3 px-4 py-3 rounded text-sm transition-all duration-300 font-medium ${
+                      activeTab === tab.id
+                        ? "bg-brass text-charcoal font-semibold shadow-inner scale-102"
+                        : "text-gray-400 hover:bg-charcoal-light hover:text-white"
+                    }`}
+                  >
+                    <Icon name={tab.icon} className={`w-5 h-5 ${activeTab === tab.id ? 'text-charcoal' : 'text-brass'}`} />
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Sidebar Footer Info */}
+            <div class="p-4 bg-charcoal-dark border-t border-charcoal-light text-center z-10">
+              <div class="flex items-center justify-center gap-2 text-xs text-gray-500 font-mono">
+                <Icon name="scissors" className="w-3.5 h-3.5 text-brass" />
+                <span>Atelier v1.0.0</span>
+              </div>
+            </div>
+
+            {/* THE VISUAL SIGNATURE: GRADUATED YELLOW MEASURING TAPE COLUMN (acts as border) */}
+            <div class="absolute right-0 top-0 bottom-0 w-8 bg-yellow-500 flex flex-col items-center justify-between py-4 select-none overflow-hidden border-l border-yellow-600 shadow-2xl">
+              {/* Dynamically drawing centimeter marks down the tape */}
+              <div class="flex-1 w-full flex flex-col justify-around relative">
+                {Array.from({ length: 28 }).map((_, idx) => {
+                  const cmValue = idx * 5 + 5; // e.g. 5, 10, 15, 20...
+                  return (
+                    <div key={idx} class="w-full flex flex-col items-end pr-1 text-black font-mono">
+                      {/* Centimeter tick line (10mm) */}
+                      <div class="w-6 border-b border-black"></div>
+                      {/* Centimeter labels */}
+                      <span class="text-[8px] font-bold pr-1 select-none leading-none pt-0.5">{cmValue}</span>
+                      {/* Intermediary minor ticks */}
+                      <div class="w-full flex flex-col items-end pr-1 opacity-50 space-y-1 my-1">
+                        <div class="w-2.5 border-b border-black"></div>
+                        <div class="w-4 border-b border-black"></div>
+                        <div class="w-2.5 border-b border-black"></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
+
+          {/* MAIN CONTAINER CONTENT */}
+          <main class="flex-1 flex flex-col overflow-hidden bg-charcoal-dark mr-8">
+            
+            {/* TOP HEADER */}
+            <header class="bg-charcoal flex items-center justify-between px-8 py-4 border-b border-charcoal-light shadow-md">
+              <div class="flex items-center gap-4">
+                <span class="font-serif text-xl font-medium tracking-wide">
+                  {activeTab === 'dashboard' && "Tableau de Bord"}
+                  {activeTab === 'clients' && "Fiches Clients & Mesures"}
+                  {activeTab === 'orders' && "Suivi des Commandes"}
+                  {activeTab === 'billing' && "Facturation & Règlements"}
+                  {activeTab === 'stock' && "Gestion du Stock"}
+                  {activeTab === 'settings' && "Configuration de l'Atelier"}
+                </span>
+                
+                {/* Active stock alerts badge */}
+                {revenueStats.lowStockCount > 0 && (
+                  <span class="flex items-center gap-1 bg-bordeaux text-white px-2 py-0.5 rounded text-[11px] font-mono font-medium animate-pulse">
+                    <Icon name="alert" className="w-3 h-3" />
+                    <span>{revenueStats.lowStockCount} alerte{revenueStats.lowStockCount > 1 ? 's' : ''} stock</span>
+                  </span>
+                )}
+              </div>
+
+              {/* USER SWITCHER ("Je suis...") */}
+              <div class="flex items-center gap-3">
+                <div class="flex flex-col items-end">
+                  <span class="text-xs text-gray-500 font-mono">Artisan actif :</span>
+                  <span class="text-xs font-semibold text-brass">{currentEmployee.name} ({currentEmployee.role})</span>
+                </div>
+                <div class="relative">
+                  <select
+                    value={currentEmployeeId}
+                    onChange={(e) => handleEmployeeChange(e.target.value)}
+                    class="bg-charcoal-light border border-brass text-white text-xs rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-brass appearance-none pr-8 cursor-pointer font-mono"
+                  >
+                    {data.employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brass">
+                    <Icon name="chevronRight" className="w-3.5 h-3.5 rotate-90" />
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* MAIN APP ROUTER VIEW */}
+            <div class="flex-1 overflow-y-auto p-8">
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  data={data}
+                  stats={revenueStats}
+                  updateOrderStatus={updateOrderStatus}
+                  setActiveTab={setActiveTab}
+                  setSelectedClientId={setSelectedClientId}
+                />
+              )}
+
+              {activeTab === 'clients' && (
+                <ClientsView
+                  data={data}
+                  selectedClientId={selectedClientId}
+                  setSelectedClientId={setSelectedClientId}
+                  search={clientSearch}
+                  setSearch={setClientSearch}
+                  onAdd={() => { setEditItem(null); setModalType('client'); }}
+                  onEdit={(cli) => { setEditItem(cli); setModalType('client'); }}
+                  onDelete={deleteClient}
+                  setActiveTab={setActiveTab}
+                />
+              )}
+
+              {activeTab === 'orders' && (
+                <OrdersView
+                  data={data}
+                  filter={orderFilter}
+                  setFilter={setOrderFilter}
+                  onAdd={() => { setEditItem(null); setModalType('order'); }}
+                  onEdit={(ord) => { setEditItem(ord); setModalType('order'); }}
+                  onDelete={deleteOrder}
+                  updateOrderStatus={updateOrderStatus}
+                  setActiveTab={setActiveTab}
+                  setSelectedClientId={setSelectedClientId}
+                  setActiveOrderView={setActiveOrderView}
+                />
+              )}
+
+              {activeTab === 'billing' && (
+                <BillingView
+                  data={data}
+                  activeOrderView={activeOrderView}
+                  setActiveOrderView={setActiveOrderView}
+                  triggerNotification={triggerNotification}
+                  setData={setData}
+                />
+              )}
+
+              {activeTab === 'stock' && (
+                <StockView
+                  data={data}
+                  filter={stockFilter}
+                  setFilter={setStockFilter}
+                  onAdd={() => { setEditItem(null); setModalType('stock'); }}
+                  onEdit={(stk) => { setEditItem(stk); setModalType('stock'); }}
+                  onDelete={deleteStockItem}
+                  adjustStock={adjustStockQuantity}
+                />
+              )}
+
+              {activeTab === 'settings' && (
+                <SettingsView
+                  data={data}
+                  onAddEmployee={() => { setEditItem(null); setModalType('employee'); }}
+                  onEditEmployee={(emp) => { setEditItem(emp); setModalType('employee'); }}
+                  onDeleteEmployee={deleteEmployee}
+                  updateWorkshopConfig={updateWorkshopConfig}
+                  exportDatabase={exportDatabase}
+                  importDatabase={importDatabase}
+                />
+              )}
+            </div>
+          </main>
+
+          {/* --- MODALS RENDER --- */}
+          {modalType === 'client' && (
+            <ClientModal
+              client={editItem}
+              onClose={() => { setModalType(null); setEditItem(null); }}
+              onSave={saveClient}
+            />
+          )}
+
+          {modalType === 'order' && (
+            <OrderModal
+              order={editItem}
+              clients={data.clients}
+              employees={data.employees}
+              onClose={() => { setModalType(null); setEditItem(null); }}
+              onSave={saveOrder}
+            />
+          )}
+
+          {modalType === 'stock' && (
+            <StockModal
+              stockItem={editItem}
+              onClose={() => { setModalType(null); setEditItem(null); }}
+              onSave={saveStockItem}
+            />
+          )}
+
+          {modalType === 'employee' && (
+            <EmployeeModal
+              employee={editItem}
+              onClose={() => { setModalType(null); setEditItem(null); }}
+              onSave={saveEmployee}
+            />
+          )}
+
+        </div>
+      );
+    }
+
+    // ==========================================
+    // --- MODULE VIEWS IMPLEMENTATIONS ---
+    // ==========================================
+
+    // --- 1. DASHBOARD VIEW ---
+    function DashboardView({ data, stats, updateOrderStatus, setActiveTab, setSelectedClientId }) {
+      
+      // Filter next 3 urgent deliveries
+      const urgentDeliveries = useMemo(() => {
+        return data.orders
+          .filter(o => o.status !== "Livrée")
+          .sort((a, b) => new Date(a.dateDelivery) - new Date(b.dateDelivery))
+          .slice(0, 3);
+      }, [data.orders]);
+
+      // Stock alerts (quantities under threshold)
+      const lowStockItems = useMemo(() => {
+        return data.stock.filter(item => item.quantity <= item.alertThreshold);
+      }, [data.stock]);
+
+      const getClientName = (clientId) => {
+        const client = data.clients.find(c => c.id === clientId);
+        return client ? client.name : "Client Inconnu";
+      };
+
+      const getStatusColor = (status) => {
+        switch(status) {
+          case 'Nouvelle': return 'bg-charcoal border-brass text-brass';
+          case 'En coupe': return 'bg-blue-900/30 border-blue-500 text-blue-300';
+          case 'En couture': return 'bg-amber-900/30 border-amber-500 text-amber-300';
+          case 'Essayage': return 'bg-purple-900/30 border-purple-500 text-purple-300';
+          case 'Prête': return 'bg-teal-900/30 border-teal-500 text-teal-300';
+          case 'Livrée': return 'bg-sage-dark border-sage text-sage-light';
+          default: return 'bg-gray-800 border-gray-600 text-gray-300';
+        }
+      };
+
+      return (
+        <div class="space-y-8 animate-fade-in">
+          
+          {/* STATS OVERVIEW CARDS */}
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            
+            {/* Stat Card: Active Orders */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded flex items-center justify-between">
+              <div>
+                <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">Commandes Actives</span>
+                <h3 class="font-serif text-3xl font-bold mt-1 text-brass">{stats.activeOrders}</h3>
+              </div>
+              <div class="bg-brass/10 p-3 rounded-full text-brass">
+                <Icon name="orders" className="w-8 h-8" />
+              </div>
+            </div>
+
+            {/* Stat Card: Revenue */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded flex items-center justify-between">
+              <div>
+                <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">Total Chiffre d'Affaires</span>
+                <h3 class="font-mono text-2xl font-bold mt-1 text-brass">{stats.totalRevenue.toLocaleString()} {data.config.devise}</h3>
+              </div>
+              <div class="bg-brass/10 p-3 rounded-full text-brass">
+                <Icon name="billing" className="w-8 h-8" />
+              </div>
+            </div>
+
+            {/* Stat Card: Advances collected */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded flex items-center justify-between">
+              <div>
+                <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">Avances Encaissées</span>
+                <h3 class="font-mono text-2xl font-bold mt-1 text-sage">{stats.totalAdvance.toLocaleString()} {data.config.devise}</h3>
+              </div>
+              <div class="bg-sage/10 p-3 rounded-full text-sage">
+                <Icon name="check" className="w-8 h-8" />
+              </div>
+            </div>
+
+            {/* Stat Card: Outstanding balances */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded flex items-center justify-between">
+              <div>
+                <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">Solde restant à percevoir</span>
+                <h3 class="font-mono text-2xl font-bold mt-1 text-amber-500">{stats.totalRemaining.toLocaleString()} {data.config.devise}</h3>
+              </div>
+              <div class="bg-amber-500/10 p-3 rounded-full text-amber-500">
+                <Icon name="info" className="w-8 h-8" />
+              </div>
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* URGENT DELIVERIES SECTION */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-4 border-b border-charcoal-light pb-2">
+                  <h4 class="font-serif text-lg text-brass font-semibold flex items-center gap-2">
+                    <Icon name="ruler" className="w-5 h-5 text-brass" />
+                    <span>Prochaines Livraisons</span>
+                  </h4>
+                  <button onClick={() => setActiveTab("orders")} class="text-xs text-brass hover:underline font-mono">Voir tout</button>
+                </div>
+
+                {urgentDeliveries.length === 0 ? (
+                  <p class="text-sm text-gray-400 italic py-4">Aucune livraison en cours planifiée.</p>
+                ) : (
+                  <div class="space-y-4">
+                    {urgentDeliveries.map(order => {
+                      const today = new Date();
+                      const delDate = new Date(order.dateDelivery);
+                      const diffTime = delDate - today;
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      const isUrgent = diffDays <= 4;
+
+                      return (
+                        <div
+                          key={order.id}
+                          class={`p-4 rounded border flex items-center justify-between transition-colors ${
+                            isUrgent ? 'border-bordeaux/60 bg-bordeaux/10' : 'border-charcoal-light bg-charcoal-light/30'
+                          }`}
+                        >
+                          <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                              <span class="font-medium text-sm text-white">{getClientName(order.clientId)}</span>
+                              <span class={`text-[10px] px-2 py-0.5 rounded border font-mono ${getStatusColor(order.status)}`}>
+                                {order.status}
+                              </span>
+                            </div>
+                            <p class="text-xs text-gray-400">{order.description}</p>
+                            <p class="text-[11px] font-mono text-gray-500">
+                              Date limite : <strong class={isUrgent ? 'text-bordeaux-light font-bold' : 'text-gray-300'}>{order.dateDelivery}</strong> {isUrgent && `(J-${diffDays})`}
+                            </p>
+                          </div>
+                          
+                          <div class="flex items-center gap-2">
+                            {/* Fast status bump button */}
+                            {order.status !== "Prête" && (
+                              <button
+                                onClick={() => {
+                                  const steps = ["Nouvelle", "En coupe", "En couture", "Essayage", "Prête", "Livrée"];
+                                  const currentIdx = steps.indexOf(order.status);
+                                  if (currentIdx < steps.length - 1) {
+                                    updateOrderStatus(order.id, steps[currentIdx + 1]);
+                                  }
+                                }}
+                                class="bg-brass hover:bg-brass-light text-charcoal px-2.5 py-1 text-xs rounded font-medium flex items-center gap-1 transition-colors"
+                              >
+                                <span>Suivant</span>
+                                <Icon name="chevronRight" className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* LOW STOCK ALERTS SECTION */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-4 border-b border-charcoal-light pb-2">
+                  <h4 class="font-serif text-lg text-brass font-semibold flex items-center gap-2">
+                    <Icon name="alert" className="w-5 h-5 text-bordeaux-light animate-pulse" />
+                    <span class="text-bordeaux-light">Alertes de Stock Bas</span>
+                  </h4>
+                  <button onClick={() => setActiveTab("stock")} class="text-xs text-brass hover:underline font-mono">Gérer le stock</button>
+                </div>
+
+                {lowStockItems.length === 0 ? (
+                  <div class="flex flex-col items-center justify-center py-6 text-center text-sage">
+                    <Icon name="check" className="w-8 h-8 mb-2" />
+                    <p class="text-sm font-medium">Tout le stock est suffisant ! Excellent travail.</p>
+                  </div>
+                ) : (
+                  <div class="space-y-3">
+                    {lowStockItems.map(item => (
+                      <div key={item.id} class="p-3 bg-bordeaux/10 border border-bordeaux/40 rounded flex items-center justify-between">
+                        <div>
+                          <span class="text-sm font-medium text-white">{item.name}</span>
+                          <p class="text-xs text-gray-400 font-mono mt-0.5">Type: {item.type}</p>
+                        </div>
+                        <div class="text-right">
+                          <span class="font-mono text-sm text-bordeaux-light font-bold block">{item.quantity} {item.unit}</span>
+                          <span class="text-[10px] text-gray-500 font-mono block">Alerte sous {item.alertThreshold} {item.unit}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          {/* QUICK START / WORKSHOP INSTRUCTION GUIDE */}
+          <div class="bg-charcoal border border-charcoal-light p-6 rounded">
+            <h4 class="font-serif text-lg text-brass font-semibold mb-3">Guide de l'Atelier</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-400">
+              <div class="space-y-2">
+                <span class="font-bold text-brass font-serif">1. Fiches Clients</span>
+                <p>Enregistrez le client et notez immédiatement ses mesures. L'affichage s'adapte en style vintage "Fiche de Mesure Couture".</p>
+              </div>
+              <div class="space-y-2">
+                <span class="font-bold text-brass font-serif">2. Suivi des Commandes</span>
+                <p>Associez une commande à un client, affectez-la à un artisan et mettez à jour le statut au fur et à mesure de l'avancement dans l'atelier.</p>
+              </div>
+              <div class="space-y-2">
+                <span class="font-bold text-brass font-serif">3. Règlements & Stocks</span>
+                <p>Consignez les acomptes versés, visualisez le solde et gardez un œil sur les fournitures pour éviter les retards de fabrication.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // --- 2. CLIENTS & MEASUREMENTS VIEW ---
+    function ClientsView({ data, selectedClientId, setSelectedClientId, search, setSearch, onAdd, onEdit, onDelete, setActiveTab }) {
+      
+      const filteredClients = useMemo(() => {
+        return data.clients.filter(c => 
+          c.name.toLowerCase().includes(search.toLowerCase()) ||
+          c.phone.includes(search)
+        );
+      }, [data.clients, search]);
+
+      const selectedClient = data.clients.find(c => c.id === selectedClientId) || filteredClients[0] || null;
+
+      // Automatically set the selected client if current selectedClientId becomes null or invalid
+      useEffect(() => {
+        if (!selectedClientId && filteredClients.length > 0) {
+          setSelectedClientId(filteredClients[0].id);
+        }
+      }, [selectedClientId, filteredClients, setSelectedClientId]);
+
+      // Client orders history helper
+      const clientOrders = useMemo(() => {
+        if (!selectedClient) return [];
+        return data.orders.filter(o => o.clientId === selectedClient.id);
+      }, [data.orders, selectedClient]);
+
+      return (
+        <div class="h-full grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fade-in">
+          
+          {/* CLIENTS DIRECTORY & SEARCH */}
+          <div class="lg:col-span-1 bg-charcoal border border-charcoal-light p-6 rounded flex flex-col h-[70vh]">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-charcoal-light">
+              <h3 class="font-serif text-lg text-brass font-bold">Annuaire Clients</h3>
+              <button
+                onClick={onAdd}
+                class="bg-brass hover:bg-brass-light text-charcoal px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-all"
+              >
+                <Icon name="plus" className="w-3.5 h-3.5" strokeWidth={3} />
+                <span>Nouveau</span>
+              </button>
+            </div>
+
+            {/* Search input */}
+            <div class="relative mb-4">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher nom ou tél..."
+                class="w-full bg-charcoal-light border border-charcoal-light text-white text-sm rounded pl-3 pr-8 py-2 focus:outline-none focus:border-brass font-mono"
+              />
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-brass">
+                <Icon name="scissors" className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Clients List container */}
+            <div class="flex-1 overflow-y-auto space-y-2">
+              {filteredClients.length === 0 ? (
+                <p class="text-xs text-gray-500 italic text-center py-8">Aucun client trouvé.</p>
+              ) : (
+                filteredClients.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedClientId(c.id)}
+                    class={`w-full text-left p-3 rounded transition-all duration-300 ${
+                      selectedClient && selectedClient.id === c.id
+                        ? 'bg-brass/25 border-l-4 border-brass text-white'
+                        : 'bg-charcoal-light/20 hover:bg-charcoal-light/50 text-gray-300'
+                    }`}
+                  >
+                    <div class="font-medium text-sm">{c.name}</div>
+                    <div class="text-xs text-gray-500 font-mono mt-0.5">{c.phone}</div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* INDIVIDUAL CLIENT BESPOKE PAPER FICE & MEASUREMENTS */}
+          <div class="lg:col-span-2 space-y-6">
+            {selectedClient ? (
+              <div class="space-y-6">
+                
+                {/* Vintage Tailor Card (Fiche de Mesure) */}
+                <div class="stitch-border paper-texture bg-cream text-charcoal rounded shadow-2xl p-8 relative overflow-hidden">
+                  
+                  {/* Decorative Needle Thread visual */}
+                  <div class="absolute top-0 right-0 w-24 h-24 pointer-events-none opacity-20">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M90 10 L40 60 C35 65, 30 70, 20 80 M40 60 C42 58, 48 55, 60 55 C70 55, 80 65, 75 75 C70 85, 55 80, 55 70" stroke="#c5a059" strokeWidth="2" strokeLinecap="round"/>
+                      <circle cx="85" cy="15" r="2" fill="#c5a059" />
+                    </svg>
+                  </div>
+
+                  <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-brass/30 pb-6 mb-6">
+                    <div>
+                      <span class="font-mono text-[9px] uppercase tracking-widest text-brass font-bold">Fiche Client Officielle</span>
+                      <h2 class="font-serif text-3xl font-bold tracking-wide mt-1 text-charcoal-dark">{selectedClient.name}</h2>
+                      <div class="flex items-center gap-2 mt-2 text-xs font-mono text-gray-600">
+                        <Icon name="phone" className="w-3.5 h-3.5 text-brass-dark" />
+                        <span>{selectedClient.phone}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div class="flex items-center gap-2">
+                      <button
+                        onClick={() => onEdit(selectedClient)}
+                        class="bg-charcoal hover:bg-charcoal-light text-cream px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors border border-charcoal-light"
+                      >
+                        <Icon name="edit" className="w-3.5 h-3.5 text-brass" />
+                        <span>Modifier</span>
+                      </button>
+                      <button
+                        onClick={() => onDelete(selectedClient.id)}
+                        class="bg-bordeaux hover:bg-bordeaux-light text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                      >
+                        <Icon name="trash" className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Measurements grid layout */}
+                  <div class="mb-6">
+                    <h3 class="font-serif text-lg font-bold border-b border-brass/20 pb-2 mb-4 text-brass-dark uppercase tracking-wider">
+                      Fiche des Mesures (cm)
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                      {[
+                        { key: 'poitrine', label: 'Poitrine' },
+                        { key: 'taille', label: 'Taille' },
+                        { key: 'hanches', label: 'Hanches' },
+                        { key: 'epaules', label: 'Épaules' },
+                        { key: 'manches', label: 'Manches' },
+                        { key: 'longueurPantalon', label: 'Long. Pantalon' },
+                        { key: 'entrejambe', label: 'Entrejambe' },
+                        { key: 'cou', label: 'Tour de Cou' },
+                        { key: 'hauteurBuste', label: 'Ht. Buste' },
+                        { key: 'poignet', label: 'Poignet' }
+                      ].map(item => (
+                        <div key={item.key} class="bg-cream-dark/40 border border-brass/20 p-2.5 rounded text-center relative">
+                          <span class="text-[10px] text-gray-500 uppercase block font-medium tracking-tight mb-1">{item.label}</span>
+                          <span class="font-mono text-lg font-bold text-charcoal-dark bg-cream px-2 py-0.5 rounded shadow-sm border border-brass/10">
+                            {selectedClient.measurements?.[item.key] || 0}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Client Bespoke Notes */}
+                  {selectedClient.notes && (
+                    <div class="mt-6 bg-cream-dark/30 border border-brass/10 p-4 rounded-sm">
+                      <h4 class="font-serif text-sm font-bold text-brass-dark mb-1">Notes Particulières & Préférences :</h4>
+                      <p class="text-xs text-gray-700 italic leading-relaxed whitespace-pre-line">{selectedClient.notes}</p>
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Clients Order History */}
+                <div class="bg-charcoal border border-charcoal-light p-6 rounded">
+                  <h3 class="font-serif text-lg text-brass font-bold mb-4 border-b border-charcoal-light pb-2">Historique des Commandes</h3>
+                  {clientOrders.length === 0 ? (
+                    <p class="text-xs text-gray-400 italic py-2">Aucune commande pour ce client.</p>
+                  ) : (
+                    <div class="space-y-3">
+                      {clientOrders.map(order => (
+                        <div key={order.id} class="p-3 bg-charcoal-light/30 border border-charcoal-light rounded flex items-center justify-between text-xs">
+                          <div>
+                            <span class="font-medium text-white block">{order.description}</span>
+                            <span class="font-mono text-gray-500 mt-1 block">Créée le : {order.dateOrdered} | Livraison : {order.dateDelivery}</span>
+                          </div>
+                          <div class="flex items-center gap-3">
+                            <span class="font-mono text-brass font-medium">{order.price} {data.config.devise}</span>
+                            <button
+                              onClick={() => {
+                                // Jump directly to order edit
+                                setActiveTab("orders");
+                              }}
+                              class="text-brass hover:text-brass-light hover:underline font-mono"
+                            >
+                              Suivre
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            ) : (
+              <div class="text-center py-16 bg-charcoal border border-charcoal-light rounded">
+                <Icon name="clients" className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <h3 class="font-serif text-lg text-gray-400 font-bold">Aucun Client Sélectionné</h3>
+                <p class="text-sm text-gray-500 mt-1">Veuillez sélectionner un client dans la liste de gauche ou en ajouter un nouveau.</p>
+              </div>
+            )}
+          </div>
+
+        </div>
+      );
+    }
+
+    // --- 3. ORDERS VIEW (SUIVI DES COMMANDES) ---
+    function OrdersView({ data, filter, setFilter, onAdd, onEdit, onDelete, updateOrderStatus, setActiveTab, setSelectedClientId, setActiveOrderView }) {
+      
+      const orderSteps = ["Nouvelle", "En coupe", "En couture", "Essayage", "Prête", "Livrée"];
+
+      const filteredOrders = useMemo(() => {
+        if (filter === "All") return data.orders;
+        return data.orders.filter(o => o.status === filter);
+      }, [data.orders, filter]);
+
+      const getClientName = (clientId) => {
+        const client = data.clients.find(c => c.id === clientId);
+        return client ? client.name : "Client Inconnu";
+      };
+
+      const getEmployeeName = (empId) => {
+        const emp = data.employees.find(e => e.id === empId);
+        return emp ? emp.name : "Non assigné";
+      };
+
+      return (
+        <div class="space-y-6 animate-fade-in">
+          
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-charcoal-light pb-4">
+            
+            {/* Filter buttons */}
+            <div class="flex flex-wrap gap-2">
+              <button
+                onClick={() => setFilter("All")}
+                class={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors border ${
+                  filter === "All"
+                    ? "bg-brass text-charcoal border-brass font-bold"
+                    : "bg-charcoal text-gray-400 border-charcoal-light hover:text-white"
+                }`}
+              >
+                Toutes ({data.orders.length})
+              </button>
+              {orderSteps.map(step => {
+                const count = data.orders.filter(o => o.status === step).length;
+                return (
+                  <button
+                    key={step}
+                    onClick={() => setFilter(step)}
+                    class={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors border ${
+                      filter === step
+                        ? "bg-brass text-charcoal border-brass font-bold"
+                        : "bg-charcoal text-gray-400 border-charcoal-light hover:text-white"
+                    }`}
+                  >
+                    {step} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Create Order Trigger */}
+            <button
+              onClick={onAdd}
+              class="bg-brass hover:bg-brass-light text-charcoal px-4 py-2 rounded text-xs font-bold flex items-center gap-1.5 shadow"
+            >
+              <Icon name="plus" className="w-4 h-4" strokeWidth={3} />
+              <span>Créer Commande</span>
+            </button>
+
+          </div>
+
+          {/* ORDERS DISPLAY LIST */}
+          {filteredOrders.length === 0 ? (
+            <div class="text-center py-16 bg-charcoal border border-charcoal-light rounded">
+              <Icon name="orders" className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <h3 class="font-serif text-lg text-gray-400 font-bold">Aucune Commande</h3>
+              <p class="text-sm text-gray-500 mt-1">Aucune commande ne correspond au filtre sélectionné.</p>
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 gap-6">
+              {filteredOrders.map(order => {
+                const statusIndex = orderSteps.indexOf(order.status);
+                
+                return (
+                  <div key={order.id} class="bg-charcoal border border-charcoal-light p-6 rounded shadow-md space-y-4">
+                    
+                    {/* Order header information */}
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-3 border-b border-charcoal-light">
+                      <div>
+                        <div class="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              setSelectedClientId(order.clientId);
+                              setActiveTab("clients");
+                            }}
+                            class="font-serif text-lg text-brass hover:underline font-bold text-left"
+                          >
+                            {getClientName(order.clientId)}
+                          </button>
+                          <span class="font-mono text-xs text-gray-500">#{order.id}</span>
+                        </div>
+                        <p class="text-sm font-medium text-white mt-1">{order.description}</p>
+                        <div class="flex flex-wrap items-center gap-4 mt-2 text-xs font-mono text-gray-400">
+                          <span>Date : {order.dateOrdered}</span>
+                          <span>Livraison : <strong class="text-brass">{order.dateDelivery}</strong></span>
+                          <span>Assigné à : <strong class="text-gray-200">{getEmployeeName(order.assignedTo)}</strong></span>
+                        </div>
+                      </div>
+
+                      {/* Invoicing quick indicators & direct billing jump */}
+                      <div class="flex flex-col items-end gap-2 text-right">
+                        <div class="font-mono text-md text-white font-bold">
+                          {order.price} {data.config.devise}
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <span class={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                            order.advance === 0 ? 'bg-bordeaux/20 text-bordeaux-light border border-bordeaux/40' :
+                            order.advance < order.price ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                            'bg-sage/20 text-sage-light border border-sage/30'
+                          }`}>
+                            {order.advance === 0 ? 'Impayé' : order.advance < order.price ? 'Acompte' : 'Payé'}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setActiveOrderView(order.id);
+                              setActiveTab("billing");
+                            }}
+                            class="text-[11px] text-brass hover:underline font-mono"
+                          >
+                            Facture & Reçu
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* INTERACTIVE WORKFLOW TIMELINE STEPPER */}
+                    <div class="pt-2">
+                      <span class="text-xs text-gray-400 font-mono block mb-2">Suivi d'avancement dans l'atelier :</span>
+                      <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+                        {orderSteps.map((step, idx) => {
+                          const isActive = idx === statusIndex;
+                          const isCompleted = idx < statusIndex;
+                          
+                          let stepColor = "bg-charcoal border-charcoal-light text-gray-500";
+                          if (isActive) {
+                            stepColor = "bg-brass text-charcoal border-brass font-bold";
+                          } else if (isCompleted) {
+                            stepColor = "bg-sage/20 border-sage/60 text-sage-light";
+                          }
+
+                          return (
+                            <button
+                              key={step}
+                              onClick={() => updateOrderStatus(order.id, step)}
+                              class={`text-left p-2.5 rounded border text-xs transition-all duration-300 ${stepColor}`}
+                            >
+                              <div class="font-mono text-[9px] opacity-75">Étape {idx + 1}</div>
+                              <div class="truncate mt-0.5 flex items-center justify-between">
+                                <span>{step}</span>
+                                {isCompleted && <Icon name="check" className="w-3.5 h-3.5 text-sage" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Order bottom notes & operational quick action */}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                      <div class="text-xs italic text-gray-400 font-mono">
+                        {order.notes ? `Instructions de couture: "${order.notes}"` : "Aucune instruction supplémentaire."}
+                      </div>
+
+                      <div class="flex items-center gap-2">
+                        <button
+                          onClick={() => onEdit(order)}
+                          class="bg-charcoal hover:bg-charcoal-light text-gray-200 border border-charcoal-light px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                        >
+                          <Icon name="edit" className="w-3.5 h-3.5 text-brass" />
+                          <span>Modifier</span>
+                        </button>
+                        <button
+                          onClick={() => onDelete(order.id)}
+                          class="bg-bordeaux hover:bg-bordeaux-light text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                        >
+                          <Icon name="trash" className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // --- 4. BILLING & INVOICING VIEW ---
+    function BillingView({ data, activeOrderView, setActiveOrderView, triggerNotification, setData }) {
+      
+      const [customAdvance, setCustomAdvance] = useState("");
+
+      const pendingBillingOrders = useMemo(() => {
+        return data.orders.filter(o => o.status !== "Livrée" || o.advance < o.price);
+      }, [data.orders]);
+
+      const selectedOrder = data.orders.find(o => o.id === activeOrderView) || pendingBillingOrders[0] || data.orders[0] || null;
+
+      useEffect(() => {
+        if (!activeOrderView && pendingBillingOrders.length > 0) {
+          setActiveOrderView(pendingBillingOrders[0].id);
+        }
+      }, [activeOrderView, pendingBillingOrders, setActiveOrderView]);
+
+      const getClient = (clientId) => {
+        return data.clients.find(c => c.id === clientId) || { name: "Client Inconnu", phone: "N/A" };
+      };
+
+      const handleAddPayment = () => {
+        if (!selectedOrder) return;
+        const inputAmount = parseFloat(customAdvance);
+        if (isNaN(inputAmount) || inputAmount <= 0) {
+          triggerNotification("Veuillez saisir un montant de règlement valide.", "error");
+          return;
+        }
+
+        const remaining = selectedOrder.price - selectedOrder.advance;
+        if (inputAmount > remaining) {
+          triggerNotification(`Le versement (${inputAmount}€) dépasse le solde restant dû (${remaining}€).`, "error");
+          return;
+        }
+
+        setData(prev => ({
+          ...prev,
+          orders: prev.orders.map(o => {
+            if (o.id === selectedOrder.id) {
+              const newAdvance = o.advance + inputAmount;
+              return { ...o, advance: newAdvance };
+            }
+            return o;
+          })
+        }));
+
+        setCustomAdvance("");
+        triggerNotification(`Règlement de ${inputAmount}€ enregistré pour cette commande.`);
+      };
+
+      const handleMarkAsFullyPaid = () => {
+        if (!selectedOrder) return;
+        setData(prev => ({
+          ...prev,
+          orders: prev.orders.map(o => {
+            if (o.id === selectedOrder.id) {
+              return { ...o, advance: o.price };
+            }
+            return o;
+          })
+        }));
+        triggerNotification(`Règlement intégral de ${selectedOrder.price}€ enregistré.`);
+      };
+
+      return (
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fade-in">
+          
+          {/* ORDERS BILLING LIST SELECTOR */}
+          <div class="lg:col-span-1 bg-charcoal border border-charcoal-light p-6 rounded flex flex-col h-[70vh]">
+            <h3 class="font-serif text-lg text-brass font-bold mb-4 pb-2 border-b border-charcoal-light">Factures & Règlements</h3>
+            <div class="flex-1 overflow-y-auto space-y-2">
+              {data.orders.length === 0 ? (
+                <p class="text-xs text-gray-500 italic text-center py-8">Aucune facture en attente.</p>
+              ) : (
+                data.orders.map(o => {
+                  const client = getClient(o.clientId);
+                  const isPaid = o.advance >= o.price;
+                  return (
+                    <button
+                      key={o.id}
+                      onClick={() => setActiveOrderView(o.id)}
+                      class={`w-full text-left p-3 rounded transition-all duration-300 ${
+                        selectedOrder && selectedOrder.id === o.id
+                          ? 'bg-brass/25 border-l-4 border-brass text-white'
+                          : 'bg-charcoal-light/20 hover:bg-charcoal-light/50 text-gray-300'
+                      }`}
+                    >
+                      <div class="flex items-center justify-between text-xs">
+                        <span class="font-mono text-gray-500">#{o.id}</span>
+                        <span class={`font-semibold font-mono ${isPaid ? 'text-sage' : 'text-amber-500'}`}>
+                          {o.advance} / {o.price} {data.config.devise}
+                        </span>
+                      </div>
+                      <div class="font-medium text-sm mt-1">{client.name}</div>
+                      <div class="text-[11px] text-gray-400 truncate mt-0.5">{o.description}</div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* BESPOKE TICKET TAILOR PRINTABLE INVOICE */}
+          <div class="lg:col-span-2 space-y-6">
+            {selectedOrder ? (
+              <div class="space-y-6">
+                
+                {/* Print/Download controls */}
+                <div class="flex items-center justify-between bg-charcoal border border-charcoal-light p-4 rounded">
+                  <span class="text-xs text-gray-400 font-mono">Options de Facturation</span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      onClick={() => window.print()}
+                      class="bg-brass hover:bg-brass-light text-charcoal px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    >
+                      <Icon name="print" className="w-3.5 h-3.5" />
+                      <span>Imprimer le Reçu</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Print Area - Printable Vintage Tailor Receipt Card */}
+                <div id="print-area" class="stitch-border paper-texture bg-cream text-charcoal rounded shadow-2xl p-8 max-w-xl mx-auto">
+                  
+                  {/* Decorative Vintage Label Border & Design */}
+                  <div class="text-center border-b-2 border-dashed border-brass/50 pb-6 mb-6">
+                    <span class="font-serif text-3xl font-bold tracking-widest text-charcoal-dark uppercase block">
+                      {data.config.nomAtelier}
+                    </span>
+                    <span class="font-mono text-[9px] uppercase tracking-widest text-brass-dark font-semibold mt-1 block">
+                      Reçu de Commande Bespoke & Tailoring
+                    </span>
+                  </div>
+
+                  {/* Customer details */}
+                  <div class="grid grid-cols-2 gap-4 text-xs font-mono text-charcoal-dark border-b border-brass/20 pb-4 mb-4">
+                    <div>
+                      <span class="text-gray-500 block uppercase">Client :</span>
+                      <strong class="text-sm font-serif text-charcoal-dark font-bold">{getClient(selectedOrder.clientId).name}</strong>
+                      <span class="block mt-0.5">{getClient(selectedOrder.clientId).phone}</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-gray-500 block uppercase">N° Commande :</span>
+                      <strong class="text-sm text-charcoal-dark font-bold">#{selectedOrder.id}</strong>
+                      <span class="block mt-0.5">Émise le: {selectedOrder.dateOrdered}</span>
+                    </div>
+                  </div>
+
+                  {/* Order description description */}
+                  <div class="space-y-4 py-2 border-b border-brass/20 pb-4 mb-4 text-xs">
+                    <span class="font-mono text-gray-500 uppercase block">Désignation du travail d'atelier :</span>
+                    <div class="flex items-start justify-between font-serif text-sm text-charcoal-dark">
+                      <div class="font-medium pr-4">
+                        {selectedOrder.description}
+                        {selectedOrder.notes && (
+                          <span class="block font-sans text-[11px] text-gray-500 italic mt-1 font-normal">
+                            Note : {selectedOrder.notes}
+                          </span>
+                        )}
+                      </div>
+                      <div class="font-mono font-bold whitespace-nowrap">{selectedOrder.price} {data.config.devise}</div>
+                    </div>
+                  </div>
+
+                  {/* Financial Balance Calculation */}
+                  <div class="space-y-2 border-b border-brass/20 pb-4 mb-6 text-xs font-mono">
+                    <div class="flex justify-between text-gray-600">
+                      <span>PRIX TOTAL BÂTI</span>
+                      <span>{selectedOrder.price} {data.config.devise}</span>
+                    </div>
+                    <div class="flex justify-between text-sage-dark font-bold">
+                      <span>AVANCES & RÈGLEMENTS PERÇUS</span>
+                      <span>- {selectedOrder.advance} {data.config.devise}</span>
+                    </div>
+                    <div class="flex justify-between text-charcoal-dark font-bold text-sm border-t border-brass/10 pt-2">
+                      <span>SOLDE RESTANT À PAYER</span>
+                      <span class={selectedOrder.price - selectedOrder.advance > 0 ? 'text-bordeaux-dark' : 'text-sage-dark'}>
+                        {selectedOrder.price - selectedOrder.advance} {data.config.devise}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Visual Stamp Status */}
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-[9px] text-gray-400 font-mono">Merci de votre confiance et de votre fidélité.</p>
+                      <p class="text-[9px] text-gray-400 font-mono mt-0.5">Signature de l'Atelier : Maison Couture</p>
+                    </div>
+                    
+                    {/* Stamp */}
+                    <div class={`border-2 px-4 py-1.5 rounded font-serif text-sm font-bold tracking-wider uppercase rotate-[-6deg] ${
+                      selectedOrder.advance >= selectedOrder.price 
+                        ? 'border-sage text-sage-dark bg-sage/10' 
+                        : selectedOrder.advance > 0 
+                        ? 'border-amber-500 text-amber-600 bg-amber-500/10'
+                        : 'border-bordeaux text-bordeaux-dark bg-bordeaux/10'
+                    }`}>
+                      {selectedOrder.advance >= selectedOrder.price ? 'Payé Intégral' : selectedOrder.advance > 0 ? 'Acompte Perçu' : 'Non Payé'}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Operations & payments recording inputs (Only displays inside app, doesn't print) */}
+                <div class="bg-charcoal border border-charcoal-light p-6 rounded space-y-4">
+                  <h4 class="font-serif text-md text-brass font-bold border-b border-charcoal-light pb-2">Enregistrer un Règlement</h4>
+                  
+                  <div class="flex flex-col sm:flex-row items-end gap-4">
+                    <div class="flex-1 space-y-1">
+                      <label class="text-xs font-mono text-gray-400">Montant du versement ({data.config.devise}) :</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 300"
+                        value={customAdvance}
+                        onChange={(e) => setCustomAdvance(e.target.value)}
+                        class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                      />
+                    </div>
+                    <button
+                      onClick={handleAddPayment}
+                      class="bg-brass hover:bg-brass-light text-charcoal px-4 py-2 rounded text-xs font-bold transition-all w-full sm:w-auto h-9.5"
+                    >
+                      Enregistrer Versement
+                    </button>
+                    <button
+                      onClick={handleMarkAsFullyPaid}
+                      class="bg-sage hover:bg-sage-light text-white px-4 py-2 rounded text-xs font-bold transition-all w-full sm:w-auto h-9.5"
+                    >
+                      Marquer comme Payé
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div class="text-center py-16 bg-charcoal border border-charcoal-light rounded">
+                <Icon name="billing" className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <h3 class="font-serif text-lg text-gray-400 font-bold">Aucune Commande</h3>
+                <p class="text-sm text-gray-500 mt-1">Créez d'abord une commande dans l'atelier pour gérer sa facturation.</p>
+              </div>
+            )}
+          </div>
+
+        </div>
+      );
+    }
+
+    // --- 5. STOCK & INVENTORY VIEW ---
+    function StockView({ data, filter, setFilter, onAdd, onEdit, onDelete, adjustStock }) {
+      
+      const filteredStock = useMemo(() => {
+        if (filter === "All") return data.stock;
+        return data.stock.filter(s => s.type === filter);
+      }, [data.stock, filter]);
+
+      return (
+        <div class="space-y-6 animate-fade-in">
+          
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-charcoal-light pb-4">
+            
+            {/* Filter buttons */}
+            <div class="flex gap-2">
+              <button
+                onClick={() => setFilter("All")}
+                class={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors border ${
+                  filter === "All"
+                    ? "bg-brass text-charcoal border-brass font-bold"
+                    : "bg-charcoal text-gray-400 border-charcoal-light hover:text-white"
+                }`}
+              >
+                Tous les articles
+              </button>
+              <button
+                onClick={() => setFilter("Tissu")}
+                class={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors border ${
+                  filter === "Tissu"
+                    ? "bg-brass text-charcoal border-brass font-bold"
+                    : "bg-charcoal text-gray-400 border-charcoal-light hover:text-white"
+                }`}
+              >
+                Tissus uniquement
+              </button>
+              <button
+                onClick={() => setFilter("Fourniture")}
+                class={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors border ${
+                  filter === "Fourniture"
+                    ? "bg-brass text-charcoal border-brass font-bold"
+                    : "bg-charcoal text-gray-400 border-charcoal-light hover:text-white"
+                }`}
+              >
+                Fournitures & Mercerie
+              </button>
+            </div>
+
+            {/* Create Stock Item trigger */}
+            <button
+              onClick={onAdd}
+              class="bg-brass hover:bg-brass-light text-charcoal px-4 py-2 rounded text-xs font-bold flex items-center gap-1.5 shadow"
+            >
+              <Icon name="plus" className="w-4 h-4" strokeWidth={3} />
+              <span>Ajouter Fourniture / Tissu</span>
+            </button>
+
+          </div>
+
+          {/* STOCK GRID */}
+          {filteredStock.length === 0 ? (
+            <div class="text-center py-16 bg-charcoal border border-charcoal-light rounded">
+              <Icon name="stock" className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <h3 class="font-serif text-lg text-gray-400 font-bold">Aucun Article</h3>
+              <p class="text-sm text-gray-500 mt-1">Aucun article ne correspond à votre filtre de recherche.</p>
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStock.map(item => {
+                const isAlert = item.quantity <= item.alertThreshold;
+                
+                return (
+                  <div
+                    key={item.id}
+                    class={`p-5 rounded border shadow transition-colors flex flex-col justify-between ${
+                      isAlert ? 'border-bordeaux bg-bordeaux/15' : 'border-charcoal-light bg-charcoal'
+                    }`}
+                  >
+                    <div>
+                      <div class="flex items-start justify-between gap-3">
+                        <span class="text-white font-serif text-md font-bold">{item.name}</span>
+                        <span class={`text-[10px] px-2 py-0.5 rounded font-mono ${
+                          item.type === 'Tissu' ? 'bg-brass/25 text-brass' : 'bg-gray-700 text-gray-300'
+                        }`}>
+                          {item.type}
+                        </span>
+                      </div>
+                      
+                      {/* Current level display */}
+                      <div class="mt-4 flex items-baseline gap-2">
+                        <span class="text-2xl font-mono font-bold text-white">
+                          {item.quantity}
+                        </span>
+                        <span class="text-xs text-gray-400 font-mono">
+                          {item.unit}
+                        </span>
+                      </div>
+
+                      {/* Threshold info indicator */}
+                      <div class="mt-2 text-xs font-mono text-gray-500">
+                        Seuil d'alerte : {item.alertThreshold} {item.unit}
+                      </div>
+
+                      {isAlert && (
+                        <div class="mt-2 flex items-center gap-1 text-[11px] font-mono text-bordeaux-light font-bold">
+                          <Icon name="alert" className="w-3.5 h-3.5" />
+                          <span>Rupture imminente ! Réapprovisionner.</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Operational controls */}
+                    <div class="mt-6 pt-3 border-t border-charcoal-light flex items-center justify-between">
+                      {/* Quick quantity increments */}
+                      <div class="flex items-center gap-1.5">
+                        <button
+                          onClick={() => adjustStock(item.id, -1)}
+                          class="bg-charcoal-light text-white w-7 h-7 rounded border border-charcoal-light hover:border-brass flex items-center justify-center font-bold text-sm"
+                        >
+                          -
+                        </button>
+                        <button
+                          onClick={() => adjustStock(item.id, 1)}
+                          class="bg-charcoal-light text-white w-7 h-7 rounded border border-charcoal-light hover:border-brass flex items-center justify-center font-bold text-sm"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Edit/Delete Actions */}
+                      <div class="flex items-center gap-2">
+                        <button
+                          onClick={() => onEdit(item)}
+                          class="p-1.5 bg-charcoal-light border border-charcoal-light rounded text-brass hover:border-brass"
+                        >
+                          <Icon name="edit" className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(item.id)}
+                          class="p-1.5 bg-bordeaux/20 border border-bordeaux/30 rounded text-bordeaux-light hover:bg-bordeaux/40"
+                        >
+                          <Icon name="trash" className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // --- 6. SETTINGS & ATELIER CONFIG VIEW ---
+    function SettingsView({ data, onAddEmployee, onEditEmployee, onDeleteEmployee, updateWorkshopConfig, exportDatabase, importDatabase }) {
+      
+      const [workshopName, setWorkshopName] = useState(data.config.nomAtelier);
+      const [workshopCurrency, setWorkshopCurrency] = useState(data.config.devise);
+
+      return (
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start animate-fade-in">
+          
+          {/* ATELIER CONFIGURATION & BACKUPS */}
+          <div class="space-y-6">
+            
+            {/* Workshop name form */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded space-y-4">
+              <h3 class="font-serif text-lg text-brass font-bold border-b border-charcoal-light pb-2">Identité de l'Atelier</h3>
+              
+              <div class="space-y-3">
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Nom officiel de l'atelier :</label>
+                  <input
+                    type="text"
+                    value={workshopName}
+                    onChange={(e) => setWorkshopName(e.target.value)}
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-serif"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Devise monétaire par défaut :</label>
+                  <input
+                    type="text"
+                    value={workshopCurrency}
+                    onChange={(e) => setWorkshopCurrency(e.target.value)}
+                    class="w-24 bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                  />
+                </div>
+                
+                <button
+                  onClick={() => {
+                    updateWorkshopConfig("nomAtelier", workshopName);
+                    updateWorkshopConfig("devise", workshopCurrency);
+                  }}
+                  class="bg-brass hover:bg-brass-light text-charcoal px-4 py-2 rounded text-xs font-bold transition-colors"
+                >
+                  Sauvegarder les Paramètres
+                </button>
+              </div>
+            </div>
+
+            {/* Backups database actions */}
+            <div class="bg-charcoal border border-charcoal-light p-6 rounded space-y-4">
+              <h3 class="font-serif text-lg text-brass font-bold border-b border-charcoal-light pb-2">Sauvegarde & Restauration</h3>
+              <p class="text-xs text-gray-400 leading-relaxed font-mono">
+                Sauvegardez l'intégralité des données de l'atelier (clients, mesures, stock, historique des commandes, employés) dans un fichier JSON pour pouvoir le transférer sur d'autres navigateurs ou conserver un backup de sécurité.
+              </p>
+              
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                <button
+                  onClick={exportDatabase}
+                  class="bg-brass/20 border border-brass text-brass hover:bg-brass/30 px-4 py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Icon name="download" className="w-3.5 h-3.5" />
+                  <span>Exporter Base (JSON)</span>
+                </button>
+
+                <div class="relative flex-1">
+                  <input
+                    type="file"
+                    id="db-import-file"
+                    accept=".json"
+                    onChange={importDatabase}
+                    class="hidden"
+                  />
+                  <label
+                    htmlFor="db-import-file"
+                    class="bg-charcoal-light border border-charcoal-light text-gray-200 hover:border-brass hover:text-white px-4 py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Icon name="upload" className="w-3.5 h-3.5" />
+                    <span>Importer Base (JSON)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ATELIER STAFF / EMPLOYEES MANAGEMENT */}
+          <div class="bg-charcoal border border-charcoal-light p-6 rounded flex flex-col">
+            <div class="flex items-center justify-between mb-4 border-b border-charcoal-light pb-2">
+              <h3 class="font-serif text-lg text-brass font-bold">Équipe de l'Atelier</h3>
+              <button
+                onClick={onAddEmployee}
+                class="bg-brass hover:bg-brass-light text-charcoal px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-all"
+              >
+                <Icon name="plus" className="w-3.5 h-3.5" strokeWidth={3} />
+                <span>Nouvel Artisan</span>
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              {data.employees.map(emp => (
+                <div key={emp.id} class="p-4 bg-charcoal-light/30 border border-charcoal-light rounded flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="bg-brass/10 w-9 h-9 rounded-full flex items-center justify-center text-brass">
+                      <Icon name="user" className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span class="font-medium text-sm text-white block">{emp.name}</span>
+                      <span class="text-xs text-gray-400 font-mono block mt-0.5">{emp.role}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      onClick={() => onEditEmployee(emp)}
+                      class="p-1.5 bg-charcoal-light border border-charcoal-light rounded text-brass hover:border-brass transition-colors"
+                    >
+                      <Icon name="edit" className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteEmployee(emp.id)}
+                      class="p-1.5 bg-bordeaux/20 border border-bordeaux/30 rounded text-bordeaux-light hover:bg-bordeaux/40 transition-colors"
+                    >
+                      <Icon name="trash" className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // ==========================================
+    // --- DIALOG MODALS COMPONENTS ---
+    // ==========================================
+
+    // --- CLIENT MODAL (ADD / EDIT) ---
+    function ClientModal({ client, onClose, onSave }) {
+      const [name, setName] = useState(client ? client.name : "");
+      const [phone, setPhone] = useState(client ? client.phone : "");
+      const [notes, setNotes] = useState(client ? client.notes : "");
+      
+      // Measurements sub-state fields
+      const [measurements, setMeasurements] = useState(client ? (client.measurements || {}) : {
+        poitrine: 0, taille: 0, hanches: 0, epaules: 0, manches: 0,
+        longueurPantalon: 0, entrejambe: 0, cou: 0, hauteurBuste: 0, poignet: 0
+      });
+
+      const handleMeasurementChange = (field, val) => {
+        const numVal = parseFloat(val) || 0;
+        setMeasurements(prev => ({
+          ...prev,
+          [field]: numVal
+        }));
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        onSave({
+          id: client?.id,
+          name,
+          phone,
+          notes,
+          measurements
+        });
+      };
+
+      return (
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div class="bg-charcoal border border-charcoal-light w-full max-w-2xl rounded-lg shadow-2xl overflow-hidden my-8">
+            
+            <header class="bg-charcoal flex items-center justify-between px-6 py-4 border-b border-charcoal-light">
+              <span class="font-serif text-lg text-brass font-bold">
+                {client ? `Modifier Fiche Client: ${client.name}` : "Ajouter Nouveau Client"}
+              </span>
+              <button onClick={onClose} class="text-gray-400 hover:text-white">
+                <Icon name="close" className="w-5 h-5" />
+              </button>
+            </header>
+
+            <form onSubmit={handleSubmit} class="p-6 space-y-6">
+              
+              {/* Coordonnées */}
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Nom Complet :</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ex: Jean Dupont"
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Téléphone de contact :</label>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Ex: +33 6 12 34 56 78"
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Mesures Form Fields Grid */}
+              <div class="space-y-3">
+                <h4 class="font-serif text-sm text-brass font-semibold border-b border-charcoal-light pb-1">
+                  Mesures anatomiques (cm) :
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {[
+                    { key: 'poitrine', label: 'Poitrine' },
+                    { key: 'taille', label: 'Taille' },
+                    { key: 'hanches', label: 'Hanches' },
+                    { key: 'epaules', label: 'Épaules' },
+                    { key: 'manches', label: 'Manches' },
+                    { key: 'longueurPantalon', label: 'Long. Pantalon' },
+                    { key: 'entrejambe', label: 'Entrejambe' },
+                    { key: 'cou', label: 'Tour Cou' },
+                    { key: 'hauteurBuste', label: 'Ht. Buste' },
+                    { key: 'poignet', label: 'Poignet' }
+                  ].map(m => (
+                    <div key={m.key} class="space-y-1">
+                      <label class="text-[10px] font-mono text-gray-400 uppercase">{m.label} :</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={measurements[m.key] || ""}
+                        onChange={(e) => handleMeasurementChange(m.key, e.target.value)}
+                        placeholder="0"
+                        class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-2 py-1 focus:outline-none focus:border-brass font-mono text-center"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Notes d'atelier, préférences du client, postures :</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Ex: Tissus fins uniquement. S'habille du côté gauche..."
+                  rows="3"
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass"
+                />
+              </div>
+
+              <footer class="pt-4 border-t border-charcoal-light flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  class="bg-charcoal hover:bg-charcoal-light border border-charcoal-light text-gray-300 px-4 py-2 rounded text-xs font-bold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  class="bg-brass hover:bg-brass-light text-charcoal px-5 py-2 rounded text-xs font-bold"
+                >
+                  Enregistrer la Fiche
+                </button>
+              </footer>
+
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // --- ORDER MODAL (ADD / EDIT) ---
+    function OrderModal({ order, clients, employees, onClose, onSave }) {
+      const [clientId, setClientId] = useState(order ? order.clientId : (clients[0]?.id || ""));
+      const [description, setDescription] = useState(order ? order.description : "");
+      const [status, setStatus] = useState(order ? order.status : "Nouvelle");
+      const [dateDelivery, setDateDelivery] = useState(order ? order.dateDelivery : "");
+      const [price, setPrice] = useState(order ? order.price : 0);
+      const [advance, setAdvance] = useState(order ? order.advance : 0);
+      const [assignedTo, setAssignedTo] = useState(order ? order.assignedTo : (employees[0]?.id || ""));
+      const [notes, setNotes] = useState(order ? order.notes : "");
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!clientId || !description.trim()) return;
+        
+        onSave({
+          id: order?.id,
+          clientId,
+          description,
+          status,
+          dateDelivery,
+          price: parseFloat(price) || 0,
+          advance: parseFloat(advance) || 0,
+          assignedTo,
+          notes,
+          // Retain order date if editing
+          dateOrdered: order ? order.dateOrdered : new Date().toISOString().split('T')[0]
+        });
+      };
+
+      return (
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div class="bg-charcoal border border-charcoal-light w-full max-w-xl rounded-lg shadow-2xl overflow-hidden my-8">
+            
+            <header class="bg-charcoal flex items-center justify-between px-6 py-4 border-b border-charcoal-light">
+              <span class="font-serif text-lg text-brass font-bold">
+                {order ? "Modifier la Commande" : "Créer une Commande d'Atelier"}
+              </span>
+              <button onClick={onClose} class="text-gray-400 hover:text-white">
+                <Icon name="close" className="w-5 h-5" />
+              </button>
+            </header>
+
+            <form onSubmit={handleSubmit} class="p-6 space-y-4">
+              
+              {/* Client Selection */}
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Client lié à la commande :</label>
+                <select
+                  required
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass cursor-pointer"
+                >
+                  <option value="" disabled>Sélectionner un client...</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.phone})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Description */}
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Description du travail (Ex: Costume trois pièces tweed) :</label>
+                <input
+                  type="text"
+                  required
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Ex: Robe de bal en soie rouge"
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass"
+                />
+              </div>
+
+              {/* Status & Assignee */}
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Statut de fabrication :</label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass cursor-pointer font-mono"
+                  >
+                    {["Nouvelle", "En coupe", "En couture", "Essayage", "Prête", "Livrée"].map(st => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Assigné à l'artisan :</label>
+                  <select
+                    value={assignedTo}
+                    onChange={(e) => setAssignedTo(e.target.value)}
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass cursor-pointer"
+                  >
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} ({emp.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Price, Advance and Date */}
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Prix de vente total :</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Acompte versé :</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={advance}
+                    onChange={(e) => setAdvance(e.target.value)}
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Date de livraison :</label>
+                  <input
+                    type="date"
+                    required
+                    value={dateDelivery}
+                    onChange={(e) => setDateDelivery(e.target.value)}
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Instructions spéciales (tissus requis, doublures, boutons, etc.) :</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Ex: Doublure en taffetas vert, fils de soie..."
+                  rows="3"
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass"
+                />
+              </div>
+
+              <footer class="pt-4 border-t border-charcoal-light flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  class="bg-charcoal hover:bg-charcoal-light border border-charcoal-light text-gray-300 px-4 py-2 rounded text-xs font-bold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  class="bg-brass hover:bg-brass-light text-charcoal px-5 py-2 rounded text-xs font-bold"
+                >
+                  Enregistrer Commande
+                </button>
+              </footer>
+
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // --- STOCK MODAL (ADD / EDIT) ---
+    function StockModal({ stockItem, onClose, onSave }) {
+      const [name, setName] = useState(stockItem ? stockItem.name : "");
+      const [type, setType] = useState(stockItem ? stockItem.type : "Tissu");
+      const [quantity, setQuantity] = useState(stockItem ? stockItem.quantity : 0);
+      const [unit, setUnit] = useState(stockItem ? stockItem.unit : "mètres");
+      const [alertThreshold, setAlertThreshold] = useState(stockItem ? stockItem.alertThreshold : 0);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        onSave({
+          id: stockItem?.id,
+          name,
+          type,
+          quantity: parseFloat(quantity) || 0,
+          unit,
+          alertThreshold: parseFloat(alertThreshold) || 0
+        });
+      };
+
+      return (
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div class="bg-charcoal border border-charcoal-light w-full max-w-md rounded-lg shadow-2xl overflow-hidden">
+            
+            <header class="bg-charcoal flex items-center justify-between px-6 py-4 border-b border-charcoal-light">
+              <span class="font-serif text-lg text-brass font-bold">
+                {stockItem ? `Modifier : ${stockItem.name}` : "Ajouter un Article au Stock"}
+              </span>
+              <button onClick={onClose} class="text-gray-400 hover:text-white">
+                <Icon name="close" className="w-5 h-5" />
+              </button>
+            </header>
+
+            <form onSubmit={handleSubmit} class="p-6 space-y-4">
+              
+              {/* Nom article */}
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Nom de l'article :</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Fil coton noir"
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass"
+                />
+              </div>
+
+              {/* Type article */}
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Nature de l'article :</label>
+                <div class="flex gap-4">
+                  {["Tissu", "Fourniture"].map(t => (
+                    <label key={t} class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="stock-type"
+                        value={t}
+                        checked={type === t}
+                        onChange={(e) => setType(e.target.value)}
+                        class="text-brass focus:ring-brass bg-charcoal-light border-charcoal-light"
+                      />
+                      <span>{t}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity and Unit */}
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Quantité en stock :</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    required
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-mono text-gray-400">Unité de mesure :</label>
+                  <input
+                    type="text"
+                    required
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    placeholder="mètres, pièces, bobines..."
+                    class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* alertThreshold */}
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Seuil d'alerte rupture :</label>
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={alertThreshold}
+                  onChange={(e) => setAlertThreshold(e.target.value)}
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass font-mono"
+                />
+              </div>
+
+              <footer class="pt-4 border-t border-charcoal-light flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  class="bg-charcoal hover:bg-charcoal-light border border-charcoal-light text-gray-300 px-4 py-2 rounded text-xs font-bold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  class="bg-brass hover:bg-brass-light text-charcoal px-5 py-2 rounded text-xs font-bold"
+                >
+                  Enregistrer l'Article
+                </button>
+              </footer>
+
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // --- EMPLOYEE MODAL (ADD / EDIT) ---
+    function EmployeeModal({ employee, onClose, onSave }) {
+      const [name, setName] = useState(employee ? employee.name : "");
+      const [role, setRole] = useState(employee ? employee.role : "");
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!name.trim() || !role.trim()) return;
+        onSave({
+          id: employee?.id,
+          name,
+          role
+        });
+      };
+
+      return (
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div class="bg-charcoal border border-charcoal-light w-full max-w-sm rounded-lg shadow-2xl overflow-hidden">
+            
+            <header class="bg-charcoal flex items-center justify-between px-6 py-4 border-b border-charcoal-light">
+              <span class="font-serif text-lg text-brass font-bold">
+                {employee ? `Modifier : ${employee.name}` : "Ajouter un Collaborateur"}
+              </span>
+              <button onClick={onClose} class="text-gray-400 hover:text-white">
+                <Icon name="close" className="w-5 h-5" />
+              </button>
+            </header>
+
+            <form onSubmit={handleSubmit} class="p-6 space-y-4">
+              
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Nom de l'artisan :</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Jean Martin"
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-mono text-gray-400">Rôle / Spécialisation (Ex: Coupeur, Brodeuse) :</label>
+                <input
+                  type="text"
+                  required
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  placeholder="Ex: Tailleur principal"
+                  class="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2 focus:outline-none focus:border-brass"
+                />
+              </div>
+
+              <footer class="pt-4 border-t border-charcoal-light flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  class="bg-charcoal hover:bg-charcoal-light border border-charcoal-light text-gray-300 px-4 py-2 rounded text-xs font-bold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  class="bg-brass hover:bg-brass-light text-charcoal px-5 py-2 rounded text-xs font-bold"
+                >
+                  Enregistrer
+                </button>
+              </footer>
+
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // --- BOOTSTRAP REACT APP IN THE ROOT CONTAINER ---
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+
+  </script>
+</body>
+</html>
