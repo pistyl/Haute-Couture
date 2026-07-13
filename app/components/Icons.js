@@ -73,6 +73,9 @@ export const Icon = ({ name, className = "w-5 h-5", strokeWidth = 2 }) => {
     ),
     moon: (
       <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    ),
+    chart: (
+      <path d="M18 20V10M12 20V4M6 20v-6M3 20h18" />
     )
   };
 

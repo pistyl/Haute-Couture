@@ -9,6 +9,7 @@ import BillingView from './components/BillingView';
 import StockView from './components/StockView';
 import SettingsView from './components/SettingsView';
 import { ClientModal, OrderModal, StockModal, EmployeeModal } from './components/Modals';
+import AnalyticsView from './components/AnalyticsView';
 
 // --- INITIAL SENEGALESE STATE DATA ---
 const defaultData = {
@@ -113,6 +114,66 @@ const defaultData = {
       advance: 85000,
       assignedTo: "emp_3",
       notes: "Doublure jupe légère. Livré à la cliente."
+    },
+    {
+      id: "ord_4",
+      clientId: "cli_1",
+      description: "Boubou traditionnel brodé en Basin Getzner bleu ciel",
+      status: "Livrée",
+      dateOrdered: "2026-05-12",
+      dateDelivery: "2026-06-05",
+      price: 180000,
+      advance: 180000,
+      assignedTo: "emp_1",
+      notes: "Livré complet."
+    },
+    {
+      id: "ord_5",
+      clientId: "cli_2",
+      description: "Veste saharienne et pantalon en Thioup Indigo",
+      status: "Livrée",
+      dateOrdered: "2026-04-18",
+      dateDelivery: "2026-05-10",
+      price: 110000,
+      advance: 110000,
+      assignedTo: "emp_2",
+      notes: "Finition boutons d'or."
+    },
+    {
+      id: "ord_6",
+      clientId: "cli_3",
+      description: "Robe longue évasée en Wax hollandais rouge",
+      status: "Livrée",
+      dateOrdered: "2026-05-04",
+      dateDelivery: "2026-05-25",
+      price: 95000,
+      advance: 95000,
+      assignedTo: "emp_3",
+      notes: "Broderie fine noire."
+    },
+    {
+      id: "ord_7",
+      clientId: "cli_1",
+      description: "Ensemble veste courte et jupe longue Basin brodé",
+      status: "Livrée",
+      dateOrdered: "2026-03-20",
+      dateDelivery: "2026-04-15",
+      price: 210000,
+      advance: 210000,
+      assignedTo: "emp_1",
+      notes: "Bespoke haut de gamme."
+    },
+    {
+      id: "ord_8",
+      clientId: "cli_2",
+      description: "Tunique cintrée et pantalon Thioup bleu indigo",
+      status: "Livrée",
+      dateOrdered: "2026-02-02",
+      dateDelivery: "2026-02-25",
+      price: 75000,
+      advance: 75000,
+      assignedTo: "emp_2",
+      notes: "Teinture naturelle."
     }
   ],
   stock: [
@@ -554,6 +615,7 @@ export default function Home() {
               { id: "clients", label: "Fiches Clients", icon: "clients" },
               { id: "orders", label: "Suivi Commandes", icon: "orders" },
               { id: "billing", label: "Facturation", icon: "billing" },
+              { id: "analytics", label: "Analyses & CA", icon: "chart" },
               { id: "stock", label: "Gestion Stock", icon: "stock" },
               { id: "settings", label: "Atelier & Config", icon: "settings" }
             ].map(tab => (
@@ -642,6 +704,7 @@ export default function Home() {
               {activeTab === 'clients' && "Fiches Clients & Mesures"}
               {activeTab === 'orders' && "Suivi des Commandes"}
               {activeTab === 'billing' && "Facturation & Règlements"}
+              {activeTab === 'analytics' && "Analyses & Chiffre d'Affaires"}
               {activeTab === 'stock' && "Gestion du Stock"}
               {activeTab === 'settings' && "Configuration de l'Atelier"}
             </span>
@@ -751,6 +814,13 @@ export default function Home() {
               setActiveOrderView={setActiveOrderView}
               triggerNotification={triggerNotification}
               setData={setData}
+              darkMode={darkMode}
+            />
+          )}
+
+          {activeTab === 'analytics' && (
+            <AnalyticsView
+              data={data}
               darkMode={darkMode}
             />
           )}
