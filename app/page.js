@@ -268,22 +268,31 @@ export default function Home() {
           fetch('/api/orders').then(r => r.json()),
           fetch('/api/stock').then(r => r.json())
         ]);
-        
+        const configData = configRes && !configRes.error ? configRes : { nomAtelier: "Atelier Baobab - Couture Sénégalaise", devise: "FCFA" };
+        const employeesData = Array.isArray(employeesRes) ? employeesRes : [];
+        const clientsData = Array.isArray(clientsRes) ? clientsRes : [];
+        const ordersData = Array.isArray(ordersRes) ? ordersRes : [];
+        const stockData = Array.isArray(stockRes) ? stockRes : [];
+
         setData({
-          config: configRes,
-          employees: employeesRes,
-          clients: clientsRes,
-          orders: ordersRes,
-          stock: stockRes
+          config: configData,
+          employees: employeesData,
+          clients: clientsData,
+          orders: ordersData,
+          stock: stockData
         });
         
-        if (employeesRes.length > 0) {
+        if (employeesData.length > 0) {
           const savedActiveEmp = localStorage.getItem("atelier_active_employee_id");
-          if (savedActiveEmp && employeesRes.some(e => e.id === savedActiveEmp)) {
+          if (savedActiveEmp && employeesData.some(e => e.id === savedActiveEmp)) {
             setCurrentEmployeeId(savedActiveEmp);
           } else {
-            setCurrentEmployeeId(employeesRes[0].id);
+            setCurrentEmployeeId(employeesData[0].id);
           }
+        }
+        
+        if (configRes && configRes.error) {
+          triggerNotification("Erreur de connexion à la base de données.", "error");
         }
       } catch (err) {
         console.error("Error loading data from database:", err);
