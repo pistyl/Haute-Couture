@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Icon from './Icons';
 
-export default function BillingView({ data, activeOrderView, setActiveOrderView, triggerNotification, setData, darkMode }) {
+export default function BillingView({ data, activeOrderView, setActiveOrderView, triggerNotification, updateOrderPayment, darkMode }) {
   
   const [customAdvance, setCustomAdvance] = useState("");
   const [showReceiptMobile, setShowReceiptMobile] = useState(false);
@@ -36,34 +36,24 @@ export default function BillingView({ data, activeOrderView, setActiveOrderView,
       return;
     }
 
-    setData(prev => ({
-      ...prev,
-      orders: prev.orders.map(o => {
-        if (o.id === selectedOrder.id) {
-          const newAdvance = o.advance + inputAmount;
-          return { ...o, advance: newAdvance };
-        }
-        return o;
+    const newAdvance = selectedOrder.advance + inputAmount;
+    updateOrderPayment(selectedOrder.id, newAdvance)
+      .then(() => {
+        setCustomAdvance("");
+        triggerNotification(`Règlement de ${inputAmount} FCFA enregistré pour cette commande.`);
       })
-    }));
-
-    setCustomAdvance("");
-    triggerNotification(`Règlement de ${inputAmount} FCFA enregistré pour cette commande.`);
+      .catch(() => {});
   };
 
   const handleMarkAsFullyPaid = () => {
     if (!selectedOrder) return;
-    setData(prev => ({
-      ...prev,
-      orders: prev.orders.map(o => {
-        if (o.id === selectedOrder.id) {
-          return { ...o, advance: o.price };
-        }
-        return o;
+    updateOrderPayment(selectedOrder.id, selectedOrder.price)
+      .then(() => {
+        triggerNotification(`Règlement intégral de ${selectedOrder.price} FCFA enregistré.`);
       })
-    }));
-    triggerNotification(`Règlement intégral de ${selectedOrder.price} FCFA enregistré.`);
+      .catch(() => {});
   };
+
 
   return (
     <div className="h-full">

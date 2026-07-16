@@ -222,7 +222,14 @@ const defaultData = {
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
-  const [data, setData] = useState(defaultData);
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({
+    config: { nomAtelier: "Chargement...", devise: "FCFA" },
+    employees: [],
+    clients: [],
+    orders: [],
+    stock: []
+  });
   const [activeTab, setActiveTab] = useState("dashboard");
   const [currentEmployeeId, setCurrentEmployeeId] = useState("");
   
@@ -248,38 +255,51 @@ export default function Home() {
   // Dark/Light mode state
   const [darkMode, setDarkMode] = useState(true);
 
-  // Safe client-side localstorage initialization
+  // Fetch all data from database on mount
   useEffect(() => {
     setIsMounted(true);
-    const saved = localStorage.getItem("atelier_couture_data");
-    if (saved) {
+    
+    const fetchAllData = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        setData(parsed);
-        if (parsed.employees?.length > 0) {
-          setCurrentEmployeeId(parsed.employees[0].id);
+        const [configRes, employeesRes, clientsRes, ordersRes, stockRes] = await Promise.all([
+          fetch('/api/config').then(r => r.json()),
+          fetch('/api/employees').then(r => r.json()),
+          fetch('/api/clients').then(r => r.json()),
+          fetch('/api/orders').then(r => r.json()),
+          fetch('/api/stock').then(r => r.json())
+        ]);
+        
+        setData({
+          config: configRes,
+          employees: employeesRes,
+          clients: clientsRes,
+          orders: ordersRes,
+          stock: stockRes
+        });
+        
+        if (employeesRes.length > 0) {
+          const savedActiveEmp = localStorage.getItem("atelier_active_employee_id");
+          if (savedActiveEmp && employeesRes.some(e => e.id === savedActiveEmp)) {
+            setCurrentEmployeeId(savedActiveEmp);
+          } else {
+            setCurrentEmployeeId(employeesRes[0].id);
+          }
         }
-      } catch (e) {
-        console.error("Erreur lors de la lecture des données locales", e);
+      } catch (err) {
+        console.error("Error loading data from database:", err);
+        triggerNotification("Erreur lors de la connexion à la base de données.", "error");
+      } finally {
+        setLoading(false);
       }
-    } else {
-      if (defaultData.employees?.length > 0) {
-        setCurrentEmployeeId(defaultData.employees[0].id);
-      }
-    }
+    };
+    
+    fetchAllData();
 
     const savedTheme = localStorage.getItem("atelier_theme");
     if (savedTheme !== null) {
       setDarkMode(savedTheme === "dark");
     }
   }, []);
-
-  // Save to localStorage
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem("atelier_couture_data", JSON.stringify(data));
-    }
-  }, [data, isMounted]);
 
   // Sync theme to localStorage
   useEffect(() => {
@@ -323,41 +343,61 @@ export default function Home() {
   // --- ACTIONS HANDLERS ---
   const handleEmployeeChange = (id) => {
     setCurrentEmployeeId(id);
+    localStorage.setItem("atelier_active_employee_id", id);
     const emp = data.employees.find(e => e.id === id);
     if (emp) {
       triggerNotification(`Connecté en tant que ${emp.name} (${emp.role})`, "info");
     }
   };
 
-  const saveClient = (clientInput) => {
-    if (clientInput.id) {
-      setData(prev => ({
-        ...prev,
-        clients: prev.clients.map(c => c.id === clientInput.id ? { ...c, ...clientInput } : c)
-      }));
-      triggerNotification(`Fiche client de ${clientInput.name} mise à jour`);
-    } else {
-      const newId = `cli_${Date.now()}`;
-      const newClient = {
-        ...clientInput,
-        id: newId,
-        measurements: clientInput.measurements || {
-          poitrine: 0, taille: 0, hanches: 0, epaules: 0, sleeves: 0,
-          manches: 0, longueurPantalon: 0, entrejambe: 0, cou: 0, hauteurBuste: 0, poignet: 0
-        }
-      };
-      setData(prev => ({
-        ...prev,
-        clients: [...prev.clients, newClient]
-      }));
-      setSelectedClientId(newId);
-      triggerNotification(`Nouveau client ${clientInput.name} ajouté`);
+  const saveClient = async (clientInput) => {
+    try {
+      if (clientInput.id) {
+        const res = await fetch('/api/clients', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(clientInput)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          clients: prev.clients.map(c => c.id === clientInput.id ? { ...c, ...clientInput } : c)
+        }));
+        triggerNotification(`Fiche client de ${clientInput.name} mise à jour`);
+      } else {
+        const newId = `cli_${Date.now()}`;
+        const newClient = {
+          ...clientInput,
+          id: newId,
+          measurements: clientInput.measurements || {
+            poitrine: 0, taille: 0, hanches: 0, epaules: 0, sleeves: 0,
+            manches: 0, longueurPantalon: 0, entrejambe: 0, cou: 0, hauteurBuste: 0, poignet: 0
+          }
+        };
+        const res = await fetch('/api/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newClient)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          clients: [...prev.clients, newClient]
+        }));
+        setSelectedClientId(newId);
+        triggerNotification(`Nouveau client ${clientInput.name} ajouté`);
+      }
+      setModalType(null);
+      setEditItem(null);
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible d'enregistrer le client.", "error");
     }
-    setModalType(null);
-    setEditItem(null);
   };
 
-  const deleteClient = (id) => {
+  const deleteClient = async (id) => {
     const hasOrders = data.orders.some(o => o.clientId === id);
     if (hasOrders) {
       triggerNotification("Impossible de supprimer ce client : des commandes y sont rattachées.", "error");
@@ -365,120 +405,249 @@ export default function Home() {
     }
     const client = data.clients.find(c => c.id === id);
     if (confirm(`Êtes-vous sûr de vouloir supprimer la fiche client de ${client.name} ?`)) {
-      setData(prev => ({
-        ...prev,
-        clients: prev.clients.filter(c => c.id !== id)
-      }));
-      setSelectedClientId(null);
-      triggerNotification("Client supprimé avec succès");
+      try {
+        const res = await fetch(`/api/clients?id=${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          clients: prev.clients.filter(c => c.id !== id)
+        }));
+        setSelectedClientId(null);
+        triggerNotification("Client supprimé avec succès");
+      } catch (err) {
+        console.error(err);
+        triggerNotification("Impossible de supprimer le client.", "error");
+      }
     }
   };
 
-  const saveOrder = (orderInput) => {
-    if (orderInput.id) {
-      setData(prev => ({
-        ...prev,
-        orders: prev.orders.map(o => o.id === orderInput.id ? { ...o, ...orderInput } : o)
-      }));
-      triggerNotification("Commande mise à jour");
-    } else {
-      const newOrder = {
-        ...orderInput,
-        id: `ord_${Date.now()}`,
-        dateOrdered: new Date().toISOString().split('T')[0]
-      };
-      setData(prev => ({
-        ...prev,
-        orders: [newOrder, ...prev.orders]
-      }));
-      triggerNotification("Nouvelle commande créée");
+  const saveOrder = async (orderInput) => {
+    try {
+      if (orderInput.id) {
+        const res = await fetch('/api/orders', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderInput)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          orders: prev.orders.map(o => o.id === orderInput.id ? { ...o, ...orderInput } : o)
+        }));
+        triggerNotification("Commande mise à jour");
+      } else {
+        const newOrder = {
+          ...orderInput,
+          id: `ord_${Date.now()}`,
+          dateOrdered: new Date().toISOString().split('T')[0]
+        };
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newOrder)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          orders: [newOrder, ...prev.orders]
+        }));
+        triggerNotification("Nouvelle commande créée");
+      }
+      setModalType(null);
+      setEditItem(null);
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible d'enregistrer la commande.", "error");
     }
-    setModalType(null);
-    setEditItem(null);
   };
 
-  const updateOrderStatus = (orderId, newStatus) => {
-    setData(prev => ({
-      ...prev,
-      orders: prev.orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
-    }));
-    triggerNotification(`Commande passée au statut : ${newStatus}`);
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status: newStatus })
+      });
+      if (!res.ok) throw new Error("API error");
+
+      setData(prev => ({
+        ...prev,
+        orders: prev.orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
+      }));
+      triggerNotification(`Commande passée au statut : ${newStatus}`);
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible de mettre à jour le statut.", "error");
+    }
   };
 
-  const deleteOrder = (id) => {
+  const updateOrderPayment = async (orderId, newAdvance) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, advance: newAdvance })
+      });
+      if (!res.ok) throw new Error("API error");
+
+      setData(prev => ({
+        ...prev,
+        orders: prev.orders.map(o => o.id === orderId ? { ...o, advance: newAdvance } : o)
+      }));
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible d'enregistrer le versement.", "error");
+      throw err;
+    }
+  };
+
+  const deleteOrder = async (id) => {
     if (confirm("Voulez-vous vraiment supprimer cette commande ?")) {
-      setData(prev => ({
-        ...prev,
-        orders: prev.orders.filter(o => o.id !== id)
-      }));
-      triggerNotification("Commande supprimée", "error");
+      try {
+        const res = await fetch(`/api/orders?id=${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          orders: prev.orders.filter(o => o.id !== id)
+        }));
+        triggerNotification("Commande supprimée", "error");
+      } catch (err) {
+        console.error(err);
+        triggerNotification("Impossible de supprimer la commande.", "error");
+      }
     }
   };
 
-  const saveStockItem = (stockInput) => {
-    if (stockInput.id) {
-      setData(prev => ({
-        ...prev,
-        stock: prev.stock.map(s => s.id === stockInput.id ? { ...s, ...stockInput } : s)
-      }));
-      triggerNotification(`Article "${stockInput.name}" mis à jour`);
-    } else {
-      setData(prev => ({
-        ...prev,
-        stock: [...prev.stock, { ...stockInput, id: `stk_${Date.now()}` }]
-      }));
-      triggerNotification(`Nouvel article "${stockInput.name}" ajouté`);
+  const saveStockItem = async (stockInput) => {
+    try {
+      if (stockInput.id) {
+        const res = await fetch('/api/stock', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stockInput)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          stock: prev.stock.map(s => s.id === stockInput.id ? { ...s, ...stockInput } : s)
+        }));
+        triggerNotification(`Article "${stockInput.name}" mis à jour`);
+      } else {
+        const newStockItem = { ...stockInput, id: `stk_${Date.now()}` };
+        const res = await fetch('/api/stock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newStockItem)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          stock: [...prev.stock, newStockItem]
+        }));
+        triggerNotification(`Nouvel article "${stockInput.name}" ajouté`);
+      }
+      setModalType(null);
+      setEditItem(null);
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible d'enregistrer l'article de stock.", "error");
     }
-    setModalType(null);
-    setEditItem(null);
   };
 
-  const adjustStockQuantity = (id, delta) => {
-    setData(prev => ({
-      ...prev,
-      stock: prev.stock.map(s => {
-        if (s.id === id) {
-          const newQty = Math.max(0, s.quantity + delta);
-          if (newQty <= s.alertThreshold && s.quantity > s.alertThreshold) {
-            triggerNotification(`Alerte : Le stock de ${s.name} est bas !`, "error");
+  const adjustStockQuantity = async (id, delta) => {
+    const item = data.stock.find(s => s.id === id);
+    if (!item) return;
+    const newQty = Math.max(0, item.quantity + delta);
+
+    try {
+      const res = await fetch('/api/stock', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, quantity: newQty })
+      });
+      if (!res.ok) throw new Error("API error");
+
+      setData(prev => ({
+        ...prev,
+        stock: prev.stock.map(s => {
+          if (s.id === id) {
+            if (newQty <= s.alertThreshold && s.quantity > s.alertThreshold) {
+              triggerNotification(`Alerte : Le stock de ${s.name} est bas !`, "error");
+            }
+            return { ...s, quantity: newQty };
           }
-          return { ...s, quantity: newQty };
-        }
-        return s;
-      })
-    }));
+          return s;
+        })
+      }));
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible d'ajuster la quantité.", "error");
+    }
   };
 
-  const deleteStockItem = (id) => {
+  const deleteStockItem = async (id) => {
     if (confirm("Supprimer cet article du stock ?")) {
-      setData(prev => ({
-        ...prev,
-        stock: prev.stock.filter(s => s.id !== id)
-      }));
-      triggerNotification("Article supprimé du stock", "error");
+      try {
+        const res = await fetch(`/api/stock?id=${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          stock: prev.stock.filter(s => s.id !== id)
+        }));
+        triggerNotification("Article supprimé du stock", "error");
+      } catch (err) {
+        console.error(err);
+        triggerNotification("Impossible de supprimer l'article.", "error");
+      }
     }
   };
 
-  const saveEmployee = (empInput) => {
-    if (empInput.id) {
-      setData(prev => ({
-        ...prev,
-        employees: prev.employees.map(e => e.id === empInput.id ? { ...e, ...empInput } : e)
-      }));
-      triggerNotification("Profil employé mis à jour");
-    } else {
-      const newEmp = { ...empInput, id: `emp_${Date.now()}` };
-      setData(prev => ({
-        ...prev,
-        employees: [...prev.employees, newEmp]
-      }));
-      triggerNotification(`Nouvel employé "${empInput.name}" ajouté`);
+  const saveEmployee = async (empInput) => {
+    try {
+      if (empInput.id) {
+        const res = await fetch('/api/employees', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(empInput)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          employees: prev.employees.map(e => e.id === empInput.id ? { ...e, ...empInput } : e)
+        }));
+        triggerNotification("Profil employé mis à jour");
+      } else {
+        const newEmp = { ...empInput, id: `emp_${Date.now()}` };
+        const res = await fetch('/api/employees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newEmp)
+        });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          employees: [...prev.employees, newEmp]
+        }));
+        triggerNotification(`Nouvel employé "${empInput.name}" ajouté`);
+      }
+      setModalType(null);
+      setEditItem(null);
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible d'enregistrer l'employé.", "error");
     }
-    setModalType(null);
-    setEditItem(null);
   };
 
-  const deleteEmployee = (id) => {
+  const deleteEmployee = async (id) => {
     if (data.employees.length <= 1) {
       triggerNotification("L'atelier doit conserver au moins un employé.", "error");
       return;
@@ -489,27 +658,48 @@ export default function Home() {
       return;
     }
     if (confirm("Voulez-vous vraiment retirer cet employé de l'atelier ?")) {
-      setData(prev => ({
-        ...prev,
-        employees: prev.employees.filter(e => e.id !== id)
-      }));
-      if (currentEmployeeId === id) {
-        const remaining = data.employees.filter(e => e.id !== id);
-        setCurrentEmployeeId(remaining[0].id);
+      try {
+        const res = await fetch(`/api/employees?id=${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error("API error");
+
+        setData(prev => ({
+          ...prev,
+          employees: prev.employees.filter(e => e.id !== id)
+        }));
+        if (currentEmployeeId === id) {
+          const remaining = data.employees.filter(e => e.id !== id);
+          setCurrentEmployeeId(remaining[0].id);
+        }
+        triggerNotification("Employé retiré", "error");
+      } catch (err) {
+        console.error(err);
+        triggerNotification("Impossible de supprimer l'employé.", "error");
       }
-      triggerNotification("Employé retiré", "error");
     }
   };
 
-  const updateWorkshopConfig = (field, value) => {
-    setData(prev => ({
-      ...prev,
-      config: {
-        ...prev.config,
-        [field]: value
-      }
-    }));
-    triggerNotification("Configuration de l'atelier enregistrée");
+  const updateWorkshopConfig = async (field, value) => {
+    const updatedConfig = {
+      ...data.config,
+      [field]: value
+    };
+    try {
+      const res = await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedConfig)
+      });
+      if (!res.ok) throw new Error("API error");
+
+      setData(prev => ({
+        ...prev,
+        config: updatedConfig
+      }));
+      triggerNotification("Configuration de l'atelier enregistrée");
+    } catch (err) {
+      console.error(err);
+      triggerNotification("Impossible d'enregistrer la configuration.", "error");
+    }
   };
 
   const exportDatabase = () => {
@@ -527,13 +717,36 @@ export default function Home() {
     const fileReader = new FileReader();
     if (event.target.files && event.target.files.length > 0) {
       fileReader.readAsText(event.target.files[0], "UTF-8");
-      fileReader.onload = e => {
+      fileReader.onload = async e => {
         try {
           const parsed = JSON.parse(e.target.result);
-          if (parsed.clients && parsed.orders && parsed.stock && parsed.employees) {
-            setData(parsed);
-            if (parsed.employees.length > 0) {
-              setCurrentEmployeeId(parsed.employees[0].id);
+          if (parsed.clients && parsed.orders && parsed.stock && parsed.employees && parsed.config) {
+            setLoading(true);
+            const res = await fetch('/api/import', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(parsed)
+            });
+            if (!res.ok) throw new Error("Import failed");
+
+            // Reload all
+            const [configRes, employeesRes, clientsRes, ordersRes, stockRes] = await Promise.all([
+              fetch('/api/config').then(r => r.json()),
+              fetch('/api/employees').then(r => r.json()),
+              fetch('/api/clients').then(r => r.json()),
+              fetch('/api/orders').then(r => r.json()),
+              fetch('/api/stock').then(r => r.json())
+            ]);
+            
+            setData({
+              config: configRes,
+              employees: employeesRes,
+              clients: clientsRes,
+              orders: ordersRes,
+              stock: stockRes
+            });
+            if (employeesRes.length > 0) {
+              setCurrentEmployeeId(employeesRes[0].id);
             }
             triggerNotification("Base de données rechargée avec succès !", "success");
           } else {
@@ -541,13 +754,14 @@ export default function Home() {
           }
         } catch (err) {
           triggerNotification("Erreur lors de l'import.", "error");
+        } finally {
+          setLoading(false);
         }
       };
     }
   };
-
   // SSR Safe Loading Screen
-  if (!isMounted) {
+  if (!isMounted || loading) {
     return (
       <div className="h-full flex items-center justify-center bg-charcoal text-brass font-serif text-xl">
         Chargement de l'Atelier...
@@ -813,7 +1027,7 @@ export default function Home() {
               activeOrderView={activeOrderView}
               setActiveOrderView={setActiveOrderView}
               triggerNotification={triggerNotification}
-              setData={setData}
+              updateOrderPayment={updateOrderPayment}
               darkMode={darkMode}
             />
           )}
