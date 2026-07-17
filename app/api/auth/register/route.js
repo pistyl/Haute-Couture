@@ -1,5 +1,5 @@
 import { query, pool } from '../../../../lib/db';
-import { hashPassword, createSessionToken, getSessionCookieString } from '../../../../lib/auth';
+import { hashPassword, createSessionToken, getSessionCookieString, setSessionCookie } from '../../../../lib/auth';
 
 export async function POST(request) {
   try {
@@ -71,16 +71,10 @@ export async function POST(request) {
     }
 
     const token = createSessionToken(userId);
-    const cookie = getSessionCookieString(token);
+    setSessionCookie(token);
 
     return Response.json(
-      { success: true, user: { id: userId, email, atelierName } },
-      {
-        headers: {
-          'Set-Cookie': cookie,
-          'Content-Type': 'application/json'
-        }
-      }
+      { success: true, user: { id: userId, email, atelierName } }
     );
   } catch (error) {
     console.error("Registration error:", error);

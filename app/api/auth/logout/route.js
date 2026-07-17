@@ -1,27 +1,11 @@
-import { getSessionCookieString } from '../../../../lib/auth';
+import { clearSessionCookie } from '../../../../lib/auth';
 
 export async function POST() {
-  const cookie = getSessionCookieString(null, true);
-  return Response.json(
-    { success: true },
-    {
-      headers: {
-        'Set-Cookie': cookie,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
+  clearSessionCookie();
+  return Response.json({ success: true });
 }
 
 export async function GET() {
-  const cookie = getSessionCookieString(null, true);
-  return Response.json(
-    { success: true },
-    {
-      headers: {
-        'Set-Cookie': cookie,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
+  clearSessionCookie();
+  return Response.json({ success: true });
 }
