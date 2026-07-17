@@ -10,6 +10,7 @@ import StockView from './components/StockView';
 import SettingsView from './components/SettingsView';
 import { ClientModal, OrderModal, StockModal, EmployeeModal } from './components/Modals';
 import AnalyticsView from './components/AnalyticsView';
+import LoginView from './components/LoginView';
 
 // --- INITIAL SENEGALESE STATE DATA ---
 const defaultData = {
@@ -223,6 +224,7 @@ const defaultData = {
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const [data, setData] = useState({
     config: { nomAtelier: "Chargement...", devise: "FCFA" },
     employees: [],
@@ -255,60 +257,82 @@ export default function Home() {
   // Dark/Light mode state
   const [darkMode, setDarkMode] = useState(true);
 
-  // Fetch all data from database on mount
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const [configRes, employeesRes, clientsRes, ordersRes, stockRes] = await Promise.all([
+        fetch('/api/config').then(r => r.json()),
+        fetch('/api/employees').then(r => r.json()),
+        fetch('/api/clients').then(r => r.json()),
+        fetch('/api/orders').then(r => r.json()),
+        fetch('/api/stock').then(r => r.json())
+      ]);
+      const configData = configRes && !configRes.error ? configRes : { nomAtelier: "Atelier Baobab - Couture Sénégalaise", devise: "FCFA" };
+      const employeesData = Array.isArray(employeesRes) ? employeesRes : [];
+      const clientsData = Array.isArray(clientsRes) ? clientsRes : [];
+      const ordersData = Array.isArray(ordersRes) ? ordersRes : [];
+      const stockData = Array.isArray(stockRes) ? stockRes : [];
+
+      setData({
+        config: configData,
+        employees: employeesData,
+        clients: clientsData,
+        orders: ordersData,
+        stock: stockData
+      });
+      
+      if (employeesData.length > 0) {
+        const savedActiveEmp = localStorage.getItem("atelier_active_employee_id");
+        if (savedActiveEmp && employeesData.some(e => e.id === savedActiveEmp)) {
+          setCurrentEmployeeId(savedActiveEmp);
+        } else {
+          setCurrentEmployeeId(employeesData[0].id);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading data from database:", err);
+      triggerNotification("Erreur lors de la connexion à la base de données.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check active user session on mount
   useEffect(() => {
     setIsMounted(true);
     
-    const fetchAllData = async () => {
+    const checkSession = async () => {
       try {
-        const [configRes, employeesRes, clientsRes, ordersRes, stockRes] = await Promise.all([
-          fetch('/api/config').then(r => r.json()),
-          fetch('/api/employees').then(r => r.json()),
-          fetch('/api/clients').then(r => r.json()),
-          fetch('/api/orders').then(r => r.json()),
-          fetch('/api/stock').then(r => r.json())
-        ]);
-        const configData = configRes && !configRes.error ? configRes : { nomAtelier: "Atelier Baobab - Couture Sénégalaise", devise: "FCFA" };
-        const employeesData = Array.isArray(employeesRes) ? employeesRes : [];
-        const clientsData = Array.isArray(clientsRes) ? clientsRes : [];
-        const ordersData = Array.isArray(ordersRes) ? ordersRes : [];
-        const stockData = Array.isArray(stockRes) ? stockRes : [];
-
-        setData({
-          config: configData,
-          employees: employeesData,
-          clients: clientsData,
-          orders: ordersData,
-          stock: stockData
-        });
-        
-        if (employeesData.length > 0) {
-          const savedActiveEmp = localStorage.getItem("atelier_active_employee_id");
-          if (savedActiveEmp && employeesData.some(e => e.id === savedActiveEmp)) {
-            setCurrentEmployeeId(savedActiveEmp);
-          } else {
-            setCurrentEmployeeId(employeesData[0].id);
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const body = await res.json();
+          if (body.success) {
+            setUser(body.user);
+            return;
           }
         }
-        
-        if (configRes && configRes.error) {
-          triggerNotification("Erreur de connexion à la base de données.", "error");
-        }
-      } catch (err) {
-        console.error("Error loading data from database:", err);
-        triggerNotification("Erreur lors de la connexion à la base de données.", "error");
+      } catch (e) {
+        console.error("Session check failed:", e);
       } finally {
         setLoading(false);
       }
     };
     
-    fetchAllData();
+    checkSession();
 
     const savedTheme = localStorage.getItem("atelier_theme");
     if (savedTheme !== null) {
       setDarkMode(savedTheme === "dark");
     }
   }, []);
+
+  // Fetch data whenever user session is established
+  useEffect(() => {
+    if (isMounted && user) {
+      fetchAllData();
+    }
+  }, [user, isMounted]);
+
 
   // Sync theme to localStorage
   useEffect(() => {
@@ -327,6 +351,23 @@ export default function Home() {
 
   const triggerNotification = (message, type = "success") => {
     setNotification({ message, type });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      setData({
+        config: { nomAtelier: "Chargement...", devise: "FCFA" },
+        employees: [],
+        clients: [],
+        orders: [],
+        stock: []
+      });
+      triggerNotification("Déconnexion réussie", "info");
+    } catch (e) {
+      triggerNotification("Erreur de déconnexion", "error");
+    }
   };
 
   const currentEmployee = useMemo(() => {
@@ -778,6 +819,10 @@ export default function Home() {
     );
   }
 
+  if (!user) {
+    return <LoginView onLoginSuccess={(u) => setUser(u)} />;
+  }
+
   return (
     <div className={`h-full flex overflow-hidden relative transition-colors duration-300 ${
       darkMode ? 'bg-charcoal text-gray-100' : 'bg-cream-light text-charcoal'
@@ -827,7 +872,7 @@ export default function Home() {
                 {data.config.nomAtelier}
               </h1>
               <p className="font-mono text-[9px] uppercase tracking-widest text-brass opacity-60 mt-1">
-                Wax, Basin & Broderies
+                créer, gérer et livrer
               </p>
             </div>
           </div>
@@ -864,11 +909,25 @@ export default function Home() {
           </nav>
         </div>
 
-        <div className={`p-4 border-t text-center z-10 pr-10 lg:pr-4 ${
+        <div className={`p-4 border-t z-10 pr-10 lg:pr-4 flex flex-col gap-3 ${
           darkMode ? 'bg-charcoal-dark border-charcoal-light' : 'bg-cream border-cream-dark'
         }`}>
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500 font-mono">
-            <Icon name="scissors" className="w-3.5 h-3.5 text-brass" />
+          {user && (
+            <div className="flex flex-col gap-2">
+              <span className={`text-[10px] font-mono tracking-wider truncate block opacity-70 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                🔑 {user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="w-full bg-rougeSenegal hover:bg-rougeSenegal-light text-white font-semibold py-1.5 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Icon name="close" className="w-3.5 h-3.5" />
+                <span>Se déconnecter</span>
+              </button>
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 font-mono font-medium">
+            <Icon name="scissors" className="w-3 h-3 text-brass" />
             <span>Atelier v1.1.0</span>
           </div>
         </div>

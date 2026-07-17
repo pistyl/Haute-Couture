@@ -18,7 +18,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: "Atelier Baobab - Maison de la Couture Sénégalaise",
+  title: "Haute Couture - créer, gérer et livrer",
   description: "Système de suivi et gestion de commandes d'inspiration sénégalaise. Fiches clients, mesures, broderies d'or, basin, wax, facturation et gestion de stock.",
 };
 
