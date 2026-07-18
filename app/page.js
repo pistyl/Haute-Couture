@@ -11,6 +11,7 @@ import SettingsView from './components/SettingsView';
 import { ClientModal, OrderModal, StockModal, EmployeeModal } from './components/Modals';
 import AnalyticsView from './components/AnalyticsView';
 import LoginView from './components/LoginView';
+import LandingPage from './components/LandingPage';
 
 // --- INITIAL SENEGALESE STATE DATA ---
 const defaultData = {
@@ -225,6 +226,7 @@ export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [data, setData] = useState({
     config: { nomAtelier: "Chargement...", devise: "FCFA" },
     employees: [],
@@ -820,7 +822,20 @@ export default function Home() {
   }
 
   if (!user) {
-    return <LoginView onLoginSuccess={(u) => setUser(u)} />;
+    if (showAuth) {
+      return (
+        <LoginView 
+          onLoginSuccess={(u) => setUser(u)} 
+          onBack={() => setShowAuth(false)} 
+        />
+      );
+    }
+    return (
+      <LandingPage 
+        onStartAuth={() => setShowAuth(true)} 
+        onStartRegister={() => setShowAuth(true)} 
+      />
+    );
   }
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function LoginView({ onLoginSuccess }) {
+export default function LoginView({ onLoginSuccess, onBack }) {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +46,15 @@ export default function LoginView({ onLoginSuccess }) {
       
       {/* Form Container */}
       <div className="w-full max-w-md bg-charcoal-dark/70 border border-charcoal-light rounded-2xl shadow-2xl p-8 backdrop-blur-md relative z-10 animate-fade-in">
+        {onBack && (
+          <button 
+            type="button"
+            onClick={onBack}
+            className="absolute top-4 left-4 text-xs font-mono text-gray-500 hover:text-white transition-colors"
+          >
+            ← Retour
+          </button>
+        )}
         {/* Logo and title */}
         <div className="text-center mb-8">
           <div className="inline-block border-b border-brass pb-2 mb-2">

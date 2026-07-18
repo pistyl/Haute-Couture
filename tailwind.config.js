@@ -13,19 +13,19 @@ module.exports = {
       },
       colors: {
         charcoal: {
-          light: '#262626',
-          DEFAULT: '#1c1c1c',
-          dark: '#111111',
+          light: '#4E3424',
+          DEFAULT: '#2E1A0F',
+          dark: '#1C0F08',
         },
         cream: {
-          light: '#fdfcf7',
-          DEFAULT: '#fcfaf2', // sand cream
-          dark: '#ebdcb9',
+          light: '#FFFBF7',
+          DEFAULT: '#FFF6ED',
+          dark: '#EADCC8',
         },
         brass: {
-          light: '#ffd700',
-          DEFAULT: '#d4af37', // golden thread
-          dark: '#b59023',
+          light: '#E5C5A4',
+          DEFAULT: '#D2A679',
+          dark: '#8B5E3C',
         },
         terracotta: {
           light: '#e07a5f',

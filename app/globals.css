@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  background-color: #111111;
+  background-color: #1C0F08;
   color: #f3f4f6;
 }
 
@@ -13,19 +13,19 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #111111;
+  background: #1C0F08;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c5a059;
+  background: #D2A679;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d9b66c;
+  background: #E5C5A4;
 }
 
 /* Sewing stitch border effect */
 .stitch-border {
-  border: 2px dashed #c5a059;
+  border: 2px dashed #D2A679;
   position: relative;
 }
 .stitch-border::before {
@@ -35,7 +35,7 @@
   left: 2px;
   right: 2px;
   bottom: 2px;
-  border: 1px solid rgba(197, 160, 89, 0.15);
+  border: 1px solid rgba(210, 166, 121, 0.15);
   pointer-events: none;
 }
 

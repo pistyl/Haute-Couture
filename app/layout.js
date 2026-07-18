@@ -1,4 +1,4 @@
-import { Cormorant_Garamond, Inter, JetBrains_Mono } from 'next/font/google';
+import { Cormorant_Garamond, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
 const cormorant = Cormorant_Garamond({
@@ -7,9 +7,10 @@ const cormorant = Cormorant_Garamond({
   weight: ['300', '400', '500', '600', '700'],
 });
 
-const inter = Inter({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
+  weight: ['300', '400', '500', '600', '700', '800'],
 });
 
 const jetbrains = JetBrains_Mono({
@@ -25,7 +26,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fr" className="h-full">
-      <body className={`${cormorant.variable} ${inter.variable} ${jetbrains.variable} h-full bg-charcoal text-white font-sans antialiased overflow-hidden`}>
+      <body className={`${cormorant.variable} ${plusJakarta.variable} ${jetbrains.variable} h-full bg-charcoal text-white font-sans antialiased overflow-hidden`}>
         {children}
       </body>
     </html>

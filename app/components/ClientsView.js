@@ -112,8 +112,8 @@ export default function ClientsView({ data, selectedClientId, setSelectedClientI
               <div className="stitch-border paper-texture bg-cream text-charcoal rounded shadow-2xl p-5 sm:p-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none opacity-20">
                   <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M90 10 L40 60 C35 65, 30 70, 20 80 M40 60 C42 58, 48 55, 60 55 C70 55, 80 65, 75 75 C70 85, 55 80, 55 70" stroke="#c5a059" strokeWidth="2" strokeLinecap="round"/>
-                    <circle cx="85" cy="15" r="2" fill="#c5a059" />
+                    <path d="M90 10 L40 60 C35 65, 30 70, 20 80 M40 60 C42 58, 48 55, 60 55 C70 55, 80 65, 75 75 C70 85, 55 80, 55 70" stroke="#D2A679" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="85" cy="15" r="2" fill="#D2A679" />
                   </svg>
                 </div>
 
