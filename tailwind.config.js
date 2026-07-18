@@ -7,9 +7,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        serif: ['var(--font-serif)', 'serif'],
+        serif: ['var(--font-sans)', 'sans-serif'],
         sans: ['var(--font-sans)', 'sans-serif'],
-        mono: ['var(--font-mono)', 'monospace'],
+        mono: ['var(--font-sans)', 'sans-serif'],
       },
       colors: {
         charcoal: {
