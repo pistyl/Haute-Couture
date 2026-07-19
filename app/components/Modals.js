@@ -138,7 +138,7 @@ export function ClientModal({ client, onClose, onSave }) {
 }
 
 // --- ORDER MODAL (ADD / EDIT) ---
-export function OrderModal({ order, clients, employees, onClose, onSave }) {
+export function OrderModal({ order, clients, employees, onClose, onSave, devise = "FCFA" }) {
   const [clientId, setClientId] = useState(order ? order.clientId : (clients[0]?.id || ""));
   const [description, setDescription] = useState(order ? order.description : "");
   const [status, setStatus] = useState(order ? order.status : "Nouvelle");
@@ -243,7 +243,7 @@ export function OrderModal({ order, clients, employees, onClose, onSave }) {
           {/* Price, Advance and Date */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-mono text-gray-400">Prix total ({data.config.devise}) :</label>
+              <label className="text-xs font-mono text-gray-400">Prix total ({devise}) :</label>
               <input
                 type="number"
                 min="0"

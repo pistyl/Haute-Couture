@@ -197,6 +197,17 @@ async function initDb() {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS unitechpay_payments (
+        reference TEXT PRIMARY KEY,
+        order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+        amount NUMERIC NOT NULL,
+        status TEXT NOT NULL,
+        method TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log("Database tables created successfully.");
 
     // Seed Config

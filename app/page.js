@@ -227,6 +227,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("FREE");
   const [data, setData] = useState({
     config: { nomAtelier: "Chargement...", devise: "FCFA" },
     employees: [],
@@ -825,6 +826,7 @@ export default function Home() {
     if (showAuth) {
       return (
         <LoginView 
+          initialPlan={selectedPlan}
           onLoginSuccess={(u) => setUser(u)} 
           onBack={() => setShowAuth(false)} 
         />
@@ -832,8 +834,8 @@ export default function Home() {
     }
     return (
       <LandingPage 
-        onStartAuth={() => setShowAuth(true)} 
-        onStartRegister={() => setShowAuth(true)} 
+        onStartAuth={() => { setSelectedPlan("FREE"); setShowAuth(true); }} 
+        onStartRegister={(plan) => { setSelectedPlan(plan || "FREE"); setShowAuth(true); }} 
       />
     );
   }
@@ -1166,6 +1168,7 @@ export default function Home() {
           employees={data.employees}
           onClose={() => { setModalType(null); setEditItem(null); }}
           onSave={saveOrder}
+          devise={data.config.devise}
         />
       )}
 

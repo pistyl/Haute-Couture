@@ -54,7 +54,6 @@ export default function BillingView({ data, activeOrderView, setActiveOrderView,
       .catch(() => {});
   };
 
-
   return (
     <div className="h-full">
       {/* Mobile back button */}
@@ -221,8 +220,8 @@ export default function BillingView({ data, activeOrderView, setActiveOrderView,
                 <h4 className={`font-serif text-md font-bold border-b pb-2 ${darkMode ? 'text-brass border-charcoal-light' : 'text-brass-dark border-gray-200'}`}>
                   Enregistrer un Règlement
                 </h4>
-                
-                <div className="flex flex-col sm:flex-row items-end gap-3">
+
+                <div className="flex flex-col sm:flex-row items-end gap-3 pt-2">
                   <div className="flex-1 space-y-1 w-full">
                     <label className={`text-xs font-mono ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Montant du versement ({data.config.devise}) :</label>
                     <input
@@ -237,13 +236,13 @@ export default function BillingView({ data, activeOrderView, setActiveOrderView,
                   </div>
                   <button
                     onClick={handleAddPayment}
-                    className="bg-brass hover:bg-brass-light text-charcoal px-4 py-2.5 rounded text-xs font-bold transition-all w-full sm:w-auto h-10 flex-shrink-0"
+                    className="bg-brass hover:bg-brass-light text-charcoal px-4 py-2.5 rounded text-xs font-bold transition-all w-full sm:w-auto h-10 flex-shrink-0 shadow-sm"
                   >
                     Enregistrer Versement
                   </button>
                   <button
                     onClick={handleMarkAsFullyPaid}
-                    className="bg-vertSenegal hover:bg-vertSenegal-light text-white px-4 py-2.5 rounded text-xs font-bold transition-all w-full sm:w-auto h-10 flex-shrink-0"
+                    className="bg-vertSenegal hover:bg-vertSenegal-light text-white px-4 py-2.5 rounded text-xs font-bold transition-all w-full sm:w-auto h-10 flex-shrink-0 shadow-sm"
                   >
                     Marquer Payé
                   </button>
