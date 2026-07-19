@@ -448,9 +448,7 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
                 />
                 Haute Couture
               </span>
-              <p className="font-mono text-[8px] uppercase tracking-widest text-brass opacity-60">
-                créer, gérer et livrer
-              </p>
+              <p className="font-mono text-[8px] uppercase tracking-widest text-brass opacity-60"></p>
             </div>
           </div>
           <div className="flex items-center gap-4">
