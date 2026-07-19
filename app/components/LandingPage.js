@@ -479,10 +479,10 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
             <span className="text-brass">précision</span>
           </h1>
           <p className="text-gray-400 text-lg leading-relaxed font-serif">
-            Haute Couture est la solution SaaS tout-en-un conçue pour les
-            maîtres tailleurs et créateurs de mode d'exception. Centralisez vos
-            fiches de mesures, suivez la fabrication de vos pièces en temps
-            réel, et pilotez vos stocks sans effort.
+            Haute Couture est la solution tout-en-un conçue pour les maîtres
+            tailleurs et créateurs de mode d'exception. Centralisez vos fiches
+            de mesures, suivez la fabrication de vos pièces en temps réel, et
+            pilotez vos stocks sans effort.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
             <button
