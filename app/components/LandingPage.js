@@ -474,7 +474,7 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 text-center lg:text-left flex flex-col lg:flex-row items-center gap-12">
         <div className="flex-1 space-y-6 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brass/30 bg-brass/5 text-brass text-xs font-mono tracking-wider">
-            <span>✨</span> L'excellence de la couture digitale
+            <span></span> L'excellence de la couture digitale
           </div>
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-tight text-white">
             Gérez votre atelier avec <span className="text-brass">art</span> et{" "}
