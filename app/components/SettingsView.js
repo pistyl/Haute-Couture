@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from './Icons';
 
 export default function SettingsView({ data, onAddEmployee, onEditEmployee, onDeleteEmployee, updateWorkshopConfig, exportDatabase, importDatabase, darkMode }) {
   
   const [workshopName, setWorkshopName] = useState(data.config.nomAtelier);
   const [workshopCurrency, setWorkshopCurrency] = useState(data.config.devise);
+
+  useEffect(() => {
+    setWorkshopName(data.config.nomAtelier);
+    setWorkshopCurrency(data.config.devise);
+  }, [data.config.nomAtelier, data.config.devise]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start animate-fade-in">
@@ -44,8 +49,10 @@ export default function SettingsView({ data, onAddEmployee, onEditEmployee, onDe
             
             <button
               onClick={() => {
-                updateWorkshopConfig("nomAtelier", workshopName);
-                updateWorkshopConfig("devise", workshopCurrency);
+                updateWorkshopConfig({
+                  nomAtelier: workshopName,
+                  devise: workshopCurrency
+                });
               }}
               className="bg-brass hover:bg-brass-light text-charcoal px-4 py-2.5 rounded text-xs font-bold transition-colors w-full sm:w-auto"
             >
@@ -111,40 +118,48 @@ export default function SettingsView({ data, onAddEmployee, onEditEmployee, onDe
         </div>
 
         <div className="space-y-3">
-          {data.employees.map(emp => (
-            <div key={emp.id} className={`p-4 border rounded flex items-center justify-between gap-3 transition-colors ${
-              darkMode ? 'bg-charcoal-light/30 border-charcoal-light' : 'bg-gray-50 border-gray-100'
+          {data.employees.length === 0 ? (
+            <div className={`p-4 rounded border text-center text-sm ${
+              darkMode ? 'bg-charcoal-light/10 border-charcoal-light text-gray-400' : 'bg-gray-50 border-gray-100 text-gray-500'
             }`}>
-              <div className="flex items-center gap-3">
-                <div className="bg-brass/10 w-9 h-9 rounded-full flex items-center justify-center text-brass flex-shrink-0">
-                  <Icon name="user" className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className={`font-medium text-sm block ${darkMode ? 'text-white' : 'text-charcoal-dark'}`}>{emp.name}</span>
-                  <span className={`text-xs font-mono block mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{emp.role}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  onClick={() => onEditEmployee(emp)}
-                  className={`p-2 rounded border transition-colors ${
-                    darkMode 
-                      ? 'bg-charcoal-light border-charcoal-light text-brass hover:border-brass' 
-                      : 'bg-white border-gray-200 text-brass hover:border-brass'
-                  }`}
-                >
-                  <Icon name="edit" className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => onDeleteEmployee(emp.id)}
-                  className="p-2 bg-rougeSenegal/20 border border-rougeSenegal/30 rounded text-rougeSenegal-light hover:bg-rougeSenegal/40 transition-colors"
-                >
-                  <Icon name="trash" className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              Aucun artisan configuré dans l'équipe. Cliquez sur "Nouvel Artisan" pour commencer à bâtir votre équipe.
             </div>
-          ))}
+          ) : (
+            data.employees.map(emp => (
+              <div key={emp.id} className={`p-4 border rounded flex items-center justify-between gap-3 transition-colors ${
+                darkMode ? 'bg-charcoal-light/30 border-charcoal-light' : 'bg-gray-50 border-gray-100'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className="bg-brass/10 w-9 h-9 rounded-full flex items-center justify-center text-brass flex-shrink-0">
+                    <Icon name="user" className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className={`font-medium text-sm block ${darkMode ? 'text-white' : 'text-charcoal-dark'}`}>{emp.name}</span>
+                    <span className={`text-xs font-mono block mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{emp.role}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => onEditEmployee(emp)}
+                    className={`p-2 rounded border transition-colors ${
+                      darkMode 
+                        ? 'bg-charcoal-light border-charcoal-light text-brass hover:border-brass' 
+                        : 'bg-white border-gray-200 text-brass hover:border-brass'
+                    }`}
+                  >
+                    <Icon name="edit" className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onDeleteEmployee(emp.id)}
+                    className="p-2 bg-rougeSenegal/20 border border-rougeSenegal/30 rounded text-rougeSenegal-light hover:bg-rougeSenegal/40 transition-colors"
+                  >
+                    <Icon name="trash" className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

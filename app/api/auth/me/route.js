@@ -10,7 +10,7 @@ export async function GET(request) {
       return Response.json({ error: "Non authentifié" }, { status: 401 });
     }
 
-    const checkUser = await query('SELECT id, email, status, plan, atelier_name as "atelierName" FROM users WHERE id = $1', [userId]);
+    const checkUser = await query('SELECT id, email, status, plan, atelier_name as "atelierName", is_admin as "isAdmin" FROM users WHERE id = $1', [userId]);
     if (checkUser.rows.length === 0) {
       return Response.json({ error: "Utilisateur introuvable" }, { status: 404 });
     }

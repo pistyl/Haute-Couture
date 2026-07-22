@@ -224,7 +224,7 @@ const defaultData = {
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("FREE");
@@ -701,10 +701,6 @@ export default function Home() {
   };
 
   const deleteEmployee = async (id) => {
-    if (data.employees.length <= 1) {
-      triggerNotification("L'atelier doit conserver au moins un employé.", "error");
-      return;
-    }
     const hasOrders = data.orders.some(o => o.assignedTo === id);
     if (hasOrders) {
       triggerNotification("Impossible de supprimer cet employé : des commandes lui sont assignées.", "error");
@@ -721,7 +717,11 @@ export default function Home() {
         }));
         if (currentEmployeeId === id) {
           const remaining = data.employees.filter(e => e.id !== id);
-          setCurrentEmployeeId(remaining[0].id);
+          if (remaining.length > 0) {
+            setCurrentEmployeeId(remaining[0].id);
+          } else {
+            setCurrentEmployeeId("");
+          }
         }
         triggerNotification("Employé retiré", "error");
       } catch (err) {
@@ -731,10 +731,10 @@ export default function Home() {
     }
   };
 
-  const updateWorkshopConfig = async (field, value) => {
+  const updateWorkshopConfig = async (newConfig) => {
     const updatedConfig = {
       ...data.config,
-      [field]: value
+      ...newConfig
     };
     try {
       const res = await fetch('/api/config', {
@@ -814,12 +814,20 @@ export default function Home() {
     }
   };
   // SSR Safe Loading Screen
-  if (!isMounted || loading) {
-    return (
-      <div className="h-full flex items-center justify-center bg-charcoal text-brass font-serif text-xl">
-        Chargement de l'Atelier...
-      </div>
-    );
+  if (!isMounted) {
+    return <div className="h-full bg-charcoal" />;
+  }
+
+  if (loading) {
+    if (user) {
+      return (
+        <div className="h-full flex flex-col items-center justify-center bg-charcoal text-brass font-serif text-xl">
+          <Icon name="scissors" className="w-12 h-12 text-brass animate-spin mb-4" />
+          <span>Chargement de l'Atelier...</span>
+        </div>
+      );
+    }
+    return <div className="h-full bg-charcoal" />;
   }
 
   if (!user) {
@@ -902,11 +910,16 @@ export default function Home() {
               { id: "billing", label: "Facturation", icon: "billing" },
               { id: "analytics", label: "Analyses & CA", icon: "chart" },
               { id: "stock", label: "Gestion Stock", icon: "stock" },
-              { id: "settings", label: "Atelier & Config", icon: "settings" }
+              { id: "settings", label: "Atelier & Config", icon: "settings" },
+              ...(user && user.isAdmin ? [{ id: "admin", label: "Back-office Admin", icon: "user", href: "/admin" }] : [])
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => {
+                  if (tab.href) {
+                    window.location.href = tab.href;
+                    return;
+                  }
                   setActiveTab(tab.id);
                   setActiveOrderView(null);
                   setSidebarOpen(false); // auto-close on mobile
