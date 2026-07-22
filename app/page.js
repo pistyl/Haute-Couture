@@ -253,6 +253,7 @@ export default function Home() {
   // Modals states
   const [modalType, setModalType] = useState(null);
   const [editItem, setEditItem] = useState(null);
+  const [confirmConfig, setConfirmConfig] = useState(null);
 
   // Active billing selection
   const [activeOrderView, setActiveOrderView] = useState(null);
@@ -450,29 +451,35 @@ export default function Home() {
     }
   };
 
-  const deleteClient = async (id) => {
+  const deleteClient = (id) => {
     const hasOrders = data.orders.some(o => o.clientId === id);
     if (hasOrders) {
       triggerNotification("Impossible de supprimer ce client : des commandes y sont rattachées.", "error");
       return;
     }
     const client = data.clients.find(c => c.id === id);
-    if (confirm(`Êtes-vous sûr de vouloir supprimer la fiche client de ${client.name} ?`)) {
-      try {
-        const res = await fetch(`/api/clients?id=${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error("API error");
+    setConfirmConfig({
+      title: "Supprimer le client",
+      message: `Êtes-vous sûr de vouloir supprimer la fiche client de ${client?.name || 'ce client'} ?`,
+      actionLabel: "Supprimer le client",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/clients?id=${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error("API error");
 
-        setData(prev => ({
-          ...prev,
-          clients: prev.clients.filter(c => c.id !== id)
-        }));
-        setSelectedClientId(null);
-        triggerNotification("Client supprimé avec succès");
-      } catch (err) {
-        console.error(err);
-        triggerNotification("Impossible de supprimer le client.", "error");
+          setData(prev => ({
+            ...prev,
+            clients: prev.clients.filter(c => c.id !== id)
+          }));
+          setSelectedClientId(null);
+          triggerNotification("Client supprimé avec succès");
+        } catch (err) {
+          console.error(err);
+          triggerNotification("Impossible de supprimer le client.", "error");
+        }
       }
-    }
+    });
   };
 
   const saveOrder = async (orderInput) => {
@@ -557,22 +564,28 @@ export default function Home() {
     }
   };
 
-  const deleteOrder = async (id) => {
-    if (confirm("Voulez-vous vraiment supprimer cette commande ?")) {
-      try {
-        const res = await fetch(`/api/orders?id=${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error("API error");
+  const deleteOrder = (id) => {
+    setConfirmConfig({
+      title: "Supprimer la commande",
+      message: "Voulez-vous vraiment supprimer cette commande ?",
+      actionLabel: "Supprimer",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/orders?id=${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error("API error");
 
-        setData(prev => ({
-          ...prev,
-          orders: prev.orders.filter(o => o.id !== id)
-        }));
-        triggerNotification("Commande supprimée", "error");
-      } catch (err) {
-        console.error(err);
-        triggerNotification("Impossible de supprimer la commande.", "error");
+          setData(prev => ({
+            ...prev,
+            orders: prev.orders.filter(o => o.id !== id)
+          }));
+          triggerNotification("Commande supprimée", "error");
+        } catch (err) {
+          console.error(err);
+          triggerNotification("Impossible de supprimer la commande.", "error");
+        }
       }
-    }
+    });
   };
 
   const saveStockItem = async (stockInput) => {
@@ -644,22 +657,28 @@ export default function Home() {
     }
   };
 
-  const deleteStockItem = async (id) => {
-    if (confirm("Supprimer cet article du stock ?")) {
-      try {
-        const res = await fetch(`/api/stock?id=${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error("API error");
+  const deleteStockItem = (id) => {
+    setConfirmConfig({
+      title: "Supprimer l'article du stock",
+      message: "Voulez-vous vraiment supprimer cet article du stock ?",
+      actionLabel: "Supprimer l'article",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/stock?id=${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error("API error");
 
-        setData(prev => ({
-          ...prev,
-          stock: prev.stock.filter(s => s.id !== id)
-        }));
-        triggerNotification("Article supprimé du stock", "error");
-      } catch (err) {
-        console.error(err);
-        triggerNotification("Impossible de supprimer l'article.", "error");
+          setData(prev => ({
+            ...prev,
+            stock: prev.stock.filter(s => s.id !== id)
+          }));
+          triggerNotification("Article supprimé du stock", "error");
+        } catch (err) {
+          console.error(err);
+          triggerNotification("Impossible de supprimer l'article.", "error");
+        }
       }
-    }
+    });
   };
 
   const saveEmployee = async (empInput) => {
@@ -700,35 +719,41 @@ export default function Home() {
     }
   };
 
-  const deleteEmployee = async (id) => {
+  const deleteEmployee = (id) => {
     const hasOrders = data.orders.some(o => o.assignedTo === id);
     if (hasOrders) {
       triggerNotification("Impossible de supprimer cet employé : des commandes lui sont assignées.", "error");
       return;
     }
-    if (confirm("Voulez-vous vraiment retirer cet employé de l'atelier ?")) {
-      try {
-        const res = await fetch(`/api/employees?id=${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error("API error");
+    setConfirmConfig({
+      title: "Retirer l'artisan",
+      message: "Voulez-vous vraiment retirer cet employé de l'atelier ?",
+      actionLabel: "Retirer l'artisan",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/employees?id=${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error("API error");
 
-        setData(prev => ({
-          ...prev,
-          employees: prev.employees.filter(e => e.id !== id)
-        }));
-        if (currentEmployeeId === id) {
-          const remaining = data.employees.filter(e => e.id !== id);
-          if (remaining.length > 0) {
-            setCurrentEmployeeId(remaining[0].id);
-          } else {
-            setCurrentEmployeeId("");
+          setData(prev => ({
+            ...prev,
+            employees: prev.employees.filter(e => e.id !== id)
+          }));
+          if (currentEmployeeId === id) {
+            const remaining = data.employees.filter(e => e.id !== id);
+            if (remaining.length > 0) {
+              setCurrentEmployeeId(remaining[0].id);
+            } else {
+              setCurrentEmployeeId("");
+            }
           }
+          triggerNotification("Employé retiré", "error");
+        } catch (err) {
+          console.error(err);
+          triggerNotification("Impossible de supprimer l'employé.", "error");
         }
-        triggerNotification("Employé retiré", "error");
-      } catch (err) {
-        console.error(err);
-        triggerNotification("Impossible de supprimer l'employé.", "error");
       }
-    }
+    });
   };
 
   const updateWorkshopConfig = async (newConfig) => {
@@ -1207,6 +1232,57 @@ export default function Home() {
           onClose={() => { setModalType(null); setEditItem(null); }}
           onSave={saveEmployee}
         />
+      )}
+
+      {/* ================= CUSTOM CONFIRMATION MODAL ================= */}
+      {confirmConfig && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-charcoal border border-charcoal-light max-w-md w-full rounded-lg shadow-2xl p-6 space-y-6 animate-fadeIn">
+            
+            {/* Modal Header */}
+            <div className="flex items-start gap-4 text-left">
+              <div className={`p-3 rounded-full flex-shrink-0 ${
+                confirmConfig.isDanger ? 'bg-rougeSenegal/10 text-rougeSenegal' : 'bg-brass/10 text-brass'
+              }`}>
+                <Icon name="alert" className="w-6 h-6" />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <h4 className="text-base font-serif font-bold text-brass leading-tight">
+                  {confirmConfig.title}
+                </h4>
+                <p className="text-sm text-gray-300 leading-relaxed font-light font-sans">
+                  {confirmConfig.message}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer / Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-charcoal-light/40">
+              <button
+                type="button"
+                onClick={() => setConfirmConfig(null)}
+                className="bg-charcoal-light hover:bg-charcoal-light/80 text-gray-300 font-semibold text-xs py-2.5 px-4 rounded border border-charcoal-light transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  confirmConfig.onConfirm();
+                  setConfirmConfig(null);
+                }}
+                className={`font-bold text-xs py-2.5 px-4 rounded transition-colors shadow-md ${
+                  confirmConfig.isDanger
+                    ? 'bg-rougeSenegal hover:bg-rougeSenegal-light text-white'
+                    : 'bg-brass hover:bg-brass-light text-charcoal'
+                }`}
+              >
+                {confirmConfig.actionLabel || 'Confirmer'}
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </div>
