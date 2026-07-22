@@ -1284,6 +1284,25 @@ export default function Home() {
           </div>
         </div>
       )}
+      {/* ================= WHATSAPP SUPPORT FLOAT BUTTON ================= */}
+      <a
+        href="https://wa.me/221775849570?text=Bonjour%20Atelier%20Baobab%2C%20j'ai%20besoin%20d'assistance."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-40 bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center group"
+        title="Discuter sur WhatsApp"
+      >
+        <svg
+          className="w-6 h-6 fill-current"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.97C16.528 2.017 14.077 1 11.72 1c-5.447 0-9.873 4.372-9.877 9.802-.001 1.768.467 3.49 1.358 5.011l-.989 3.618 3.734-.967zm12.338-7.37c-.328-.163-1.94-.945-2.241-1.053-.301-.11-.52-.163-.739.163-.22.329-.85.105-1.04.105-.19-.11-.383-.163-.711-.327-1.107-.573-1.926-1.127-2.63-2.316-.182-.309-.182-.477-.02-.635.147-.143.328-.383.493-.574.165-.19.22-.328.328-.546.11-.219.055-.41-.027-.574-.082-.164-.739-1.748-1.013-2.427-.267-.648-.561-.561-.739-.57l-.626-.011c-.22 0-.575.082-.876.41-.301.328-1.15 1.12-1.15 2.733 0 1.613 1.177 3.17 1.338 3.39.164.219 2.31 3.513 5.596 4.927.781.337 1.39.538 1.86.687.787.248 1.503.213 2.068.129.632-.093 1.94-.783 2.213-1.54.274-.757.274-1.404.192-1.54-.082-.136-.301-.218-.629-.381z" />
+        </svg>
+        <span className="absolute right-14 bg-charcoal text-cream font-mono text-[10px] tracking-wider py-1.5 px-3 rounded shadow-xl border border-charcoal-light opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+          💬 Support WhatsApp
+        </span>
+      </a>
 
     </div>
   );
