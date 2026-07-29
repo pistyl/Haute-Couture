@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from './Icons';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import SearchableSelect from './SearchableSelect';
 
 // --- CLIENT MODAL (ADD / EDIT) ---
 export function ClientModal({ client, onClose, onSave }) {
@@ -148,18 +149,27 @@ export function ClientModal({ client, onClose, onSave }) {
 
 // --- ORDER MODAL (ADD / EDIT) ---
 export function OrderModal({ order, clients, employees, onClose, onSave, devise = "FCFA" }) {
-  const [clientId, setClientId] = useState(order ? order.clientId : (clients[0]?.id || ""));
+  const [clientId, setClientId] = useState(order ? order.clientId : "");
   const [description, setDescription] = useState(order ? order.description : "");
   const [status, setStatus] = useState(order ? order.status : "Nouvelle");
   const [dateDelivery, setDateDelivery] = useState(order ? order.dateDelivery : "");
   const [price, setPrice] = useState(order ? order.price : 0);
   const [advance, setAdvance] = useState(order ? order.advance : 0);
-  const [assignedTo, setAssignedTo] = useState(order ? order.assignedTo : (employees[0]?.id || ""));
+  const [assignedTo, setAssignedTo] = useState(order ? order.assignedTo : "");
   const [notes, setNotes] = useState(order ? order.notes : "");
+  const [formError, setFormError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!clientId || !description.trim()) return;
+    if (!clientId) {
+      setFormError("Veuillez sélectionner un client.");
+      return;
+    }
+    if (!description.trim()) {
+      setFormError("Veuillez renseigner la désignation du vêtement.");
+      return;
+    }
+    setFormError("");
     
     onSave({
       id: order?.id,
@@ -169,7 +179,7 @@ export function OrderModal({ order, clients, employees, onClose, onSave, devise 
       dateDelivery,
       price: parseFloat(price) || 0,
       advance: parseFloat(advance) || 0,
-      assignedTo,
+      assignedTo: assignedTo || null,
       notes,
       dateOrdered: order ? order.dateOrdered : new Date().toISOString().split('T')[0]
     });
@@ -188,22 +198,26 @@ export function OrderModal({ order, clients, employees, onClose, onSave, devise 
         </header>
 
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+          {formError && (
+            <div className="bg-rougeSenegal/10 border border-rougeSenegal-light text-rougeSenegal-light text-xs px-3 py-2 rounded font-mono flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span>{formError}</span>
+            </div>
+          )}
+
           {/* Client Selection */}
           <div className="space-y-1">
             <label className="text-xs font-mono text-gray-400">Client lié à la commande :</label>
-            <select
-              required
+            <SearchableSelect
+              options={clients.map(c => ({
+                value: c.id,
+                label: `${c.name} (${c.phone || "Pas de numéro"})`
+              }))}
               value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="w-full bg-charcoal-light border border-charcoal-light text-white text-sm rounded px-3 py-2.5 focus:outline-none focus:border-brass cursor-pointer"
-            >
-              <option value="" disabled>Sélectionner un client...</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.phone})
-                </option>
-              ))}
-            </select>
+              onChange={setClientId}
+              placeholder="Sélectionner un client..."
+              required={true}
+            />
           </div>
 
           {/* Description */}
@@ -235,17 +249,18 @@ export function OrderModal({ order, clients, employees, onClose, onSave, devise 
             </div>
             <div className="space-y-1">
               <label className="text-xs font-mono text-gray-400">Artisan assigné :</label>
-              <select
+              <SearchableSelect
+                options={[
+                  { value: "", label: "Non assigné" },
+                  ...employees.map(emp => ({
+                    value: emp.id,
+                    label: `${emp.name} (${emp.role})`
+                  }))
+                ]}
                 value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full bg-charcoal-light border border-charcoal-light text-white text-sm rounded px-3 py-2.5 focus:outline-none focus:border-brass cursor-pointer"
-              >
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name} ({emp.role})
-                  </option>
-                ))}
-              </select>
+                onChange={setAssignedTo}
+                placeholder="Sélectionner un artisan..."
+              />
             </div>
           </div>
 
