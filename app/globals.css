@@ -61,3 +61,105 @@
     width: 100%;
   }
 }
+
+/* PhoneInput custom styling to match the premium dark theme */
+.PhoneInput {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.PhoneInputInput {
+  width: 100%;
+  background-color: rgba(40, 40, 40, 0.6); /* Matches bg-charcoal-light/60 */
+  border: 1px solid #3f3f3f; /* Matches border-charcoal-light */
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  font-family: monospace;
+  transition: all 0.2s ease-in-out;
+}
+
+.PhoneInputInput:focus {
+  outline: none;
+  border-color: #D2A679; /* Matches border-brass */
+}
+
+/* For Light Mode or alternative borders inside Modals.js client modal input */
+.client-phone-input .PhoneInputInput {
+  background-color: #2a2a2a; /* Matches bg-charcoal-light */
+  border: 1px solid #2a2a2a; /* Matches border-charcoal-light */
+  border-radius: 0.25rem; /* Matches rounded */
+  padding: 0.625rem 0.75rem; /* Matches px-3 py-2.5 */
+}
+
+.client-phone-input .PhoneInputInput:focus {
+  border-color: #D2A679; /* Matches focus:border-brass */
+}
+
+/* Country Selector wrapper */
+.PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  background-color: rgba(40, 40, 40, 0.6);
+  border: 1px solid #3f3f3f;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  height: 2.875rem; /* Height match with input py-3 (about 46px) */
+  cursor: pointer;
+  position: relative;
+}
+
+.client-phone-input .PhoneInputCountry {
+  background-color: #2a2a2a;
+  border: 1px solid #2a2a2a;
+  border-radius: 0.25rem;
+  height: 2.5rem; /* Height match with px-3 py-2.5 (about 40px) */
+}
+
+.PhoneInputCountrySelect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  background-color: #1a1a1a;
+  color: white;
+}
+
+/* Style options in native select */
+.PhoneInputCountrySelect option {
+  background-color: #1C0F08;
+  color: white;
+}
+
+.PhoneInputCountryIcon {
+  width: 1.5em;
+  height: 1em;
+}
+
+/* Flag image styling */
+.PhoneInputCountryIconImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+/* Arrow indicator next to the flag */
+.PhoneInputCountrySelectArrow {
+  display: inline-block;
+  margin-left: 0.35rem;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #D2A679; /* brass color */
+}

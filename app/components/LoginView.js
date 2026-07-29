@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 
 export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -27,6 +28,18 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    
+    if (isRegister && plan !== "FREE") {
+      if (!phone) {
+        setError("Veuillez renseigner votre numéro de téléphone.");
+        return;
+      }
+      if (!isValidPhoneNumber(phone)) {
+        setError("Numéro de téléphone invalide.");
+        return;
+      }
+    }
+
     setLoading(true);
 
     const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
@@ -75,6 +88,10 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
     setError("");
     if (!phone) {
       setError("Veuillez renseigner votre numéro de téléphone.");
+      return;
+    }
+    if (!isValidPhoneNumber(phone)) {
+      setError("Numéro de téléphone invalide.");
       return;
     }
     setLoading(true);
@@ -190,13 +207,11 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
 
             <div className="space-y-1">
               <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Numéro de Téléphone</label>
-              <input
-                type="text"
-                required
+              <PhoneInput
+                defaultCountry="SN"
+                placeholder="Ex: +221 77 123 45 67"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Ex: 771234567"
-                className="w-full bg-charcoal-light/60 border border-charcoal-light rounded-lg text-white text-sm px-4 py-3 focus:outline-none focus:border-brass transition-all font-mono"
+                onChange={setPhone}
               />
             </div>
 
@@ -359,13 +374,11 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
 
               <div className="space-y-1">
                 <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Numéro de Téléphone (Mobile Money)</label>
-                <input
-                  type="text"
-                  required
+                <PhoneInput
+                  defaultCountry="SN"
+                  placeholder="Ex: +221 77 123 45 67"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Ex: 771234567"
-                  className="w-full bg-charcoal-light/60 border border-charcoal-light rounded-lg text-white text-sm px-4 py-3 focus:outline-none focus:border-brass transition-all font-mono"
+                  onChange={setPhone}
                 />
               </div>
             </div>

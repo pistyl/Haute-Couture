@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import Icon from './Icons';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 
 // --- CLIENT MODAL (ADD / EDIT) ---
 export function ClientModal({ client, onClose, onSave }) {
   const [name, setName] = useState(client ? client.name : "");
   const [phone, setPhone] = useState(client ? client.phone : "");
   const [notes, setNotes] = useState(client ? client.notes : "");
+  const [phoneError, setPhoneError] = useState("");
   
   const [measurements, setMeasurements] = useState(client ? (client.measurements || {}) : {
     poitrine: 0, taille: 0, hanches: 0, epaules: 0, manches: 0,
@@ -23,6 +25,11 @@ export function ClientModal({ client, onClose, onSave }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
+    if (phone && !isValidPhoneNumber(phone)) {
+      setPhoneError("Numéro de téléphone invalide.");
+      return;
+    }
+    setPhoneError("");
     onSave({
       id: client?.id,
       name,
@@ -58,15 +65,17 @@ export function ClientModal({ client, onClose, onSave }) {
                 className="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2.5 focus:outline-none focus:border-brass"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 client-phone-input">
               <label className="text-xs font-mono text-gray-400">Téléphone de contact :</label>
-              <input
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+              <PhoneInput
+                defaultCountry="SN"
                 placeholder="Ex: +221 77 123 45 67"
-                className="w-full bg-charcoal-light border border-charcoal-light rounded text-white text-sm px-3 py-2.5 focus:outline-none focus:border-brass font-mono"
+                value={phone}
+                onChange={setPhone}
               />
+              {phoneError && (
+                <p className="text-rougeSenegal-light text-[11px] font-mono mt-1">{phoneError}</p>
+              )}
             </div>
           </div>
 
