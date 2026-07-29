@@ -537,23 +537,31 @@ export default function Home() {
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, status: newStatus })
-      });
-      if (!res.ok) throw new Error("API error");
+    setConfirmConfig({
+      title: "Changer le statut",
+      message: `Voulez-vous vraiment changer le statut de cette commande pour : "${newStatus}" ?`,
+      actionLabel: "Changer le statut",
+      isDanger: false,
+      onConfirm: async () => {
+        try {
+          const res = await fetch('/api/orders', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: orderId, status: newStatus })
+          });
+          if (!res.ok) throw new Error("API error");
 
-      setData(prev => ({
-        ...prev,
-        orders: prev.orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
-      }));
-      triggerNotification(`Commande passée au statut : ${newStatus}`);
-    } catch (err) {
-      console.error(err);
-      triggerNotification("Impossible de mettre à jour le statut.", "error");
-    }
+          setData(prev => ({
+            ...prev,
+            orders: prev.orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
+          }));
+          triggerNotification(`Commande passée au statut : ${newStatus}`);
+        } catch (err) {
+          console.error(err);
+          triggerNotification("Impossible de mettre à jour le statut.", "error");
+        }
+      }
+    });
   };
 
   const updateOrderPayment = async (orderId, newAdvance) => {
