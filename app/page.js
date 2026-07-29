@@ -224,7 +224,7 @@ const defaultData = {
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("FREE");
