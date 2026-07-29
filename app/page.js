@@ -328,6 +328,11 @@ export default function Home() {
     if (savedTheme !== null) {
       setDarkMode(savedTheme === "dark");
     }
+
+    const savedTab = localStorage.getItem("atelier_active_tab");
+    if (savedTab !== null) {
+      setActiveTab(savedTab);
+    }
   }, []);
 
   // Fetch data whenever user session is established
@@ -344,6 +349,13 @@ export default function Home() {
       localStorage.setItem("atelier_theme", darkMode ? "dark" : "light");
     }
   }, [darkMode, isMounted]);
+
+  // Sync activeTab to localStorage
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem("atelier_active_tab", activeTab);
+    }
+  }, [activeTab, isMounted]);
 
   // Notifications timeout
   useEffect(() => {
