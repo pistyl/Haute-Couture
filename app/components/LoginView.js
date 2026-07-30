@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import PhoneInput, { isValidPhoneNumber, getCountryCallingCode } from 'react-phone-number-input';
 
 export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -7,8 +7,45 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
   const [password, setPassword] = useState("");
   const [atelierName, setAtelierName] = useState("");
   const [plan, setPlan] = useState(initialPlan);
-  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("SN");
+  const [phone, setPhone] = useState("+221");
   const [paymentMethod, setPaymentMethod] = useState("wave");
+
+  const getCleanPhone = (val, cntry) => {
+    if (!val) return "";
+    try {
+      const callingCode = getCountryCallingCode(cntry || "SN");
+      if (val.trim() === `+${callingCode}`) {
+        return "";
+      }
+    } catch (e) {}
+    return val;
+  };
+
+  const handleCountryChange = (newCountry) => {
+    if (!newCountry) return;
+    setCountry(newCountry);
+    
+    try {
+      const callingCode = getCountryCallingCode(newCountry);
+      const newPrefix = `+${callingCode}`;
+      
+      if (!phone) {
+        setPhone(newPrefix);
+        return;
+      }
+      
+      const match = phone.match(/^\+(\d+)/);
+      if (match) {
+        const currentCallingCode = match[1];
+        setPhone(phone.replace(`+${currentCallingCode}`, newPrefix));
+      } else {
+        setPhone(newPrefix + phone);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
   
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,12 +66,14 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
     e.preventDefault();
     setError("");
     
+    const cleanPhone = getCleanPhone(phone, country);
+    
     if (isRegister && plan !== "FREE") {
-      if (!phone) {
+      if (!cleanPhone) {
         setError("Veuillez renseigner votre numéro de téléphone.");
         return;
       }
-      if (!isValidPhoneNumber(phone)) {
+      if (!isValidPhoneNumber(cleanPhone)) {
         setError("Numéro de téléphone invalide.");
         return;
       }
@@ -44,7 +83,7 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
 
     const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
     const payload = isRegister 
-      ? { email, password, atelierName, plan, phone, paymentMethod } 
+      ? { email, password, atelierName, plan, phone: cleanPhone, paymentMethod } 
       : { email, password };
 
     try {
@@ -64,7 +103,11 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
             email: data.email,
             plan: data.plan
           });
-          setPhone("");
+          try {
+            setPhone(`+${getCountryCallingCode(country || "SN")}`);
+          } catch (e) {
+            setPhone("");
+          }
           setLoading(false);
           return;
         }
@@ -86,11 +129,12 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
   const handlePendingPaySubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!phone) {
+    const cleanPhone = getCleanPhone(phone, country);
+    if (!cleanPhone) {
       setError("Veuillez renseigner votre numéro de téléphone.");
       return;
     }
-    if (!isValidPhoneNumber(phone)) {
+    if (!isValidPhoneNumber(cleanPhone)) {
       setError("Numéro de téléphone invalide.");
       return;
     }
@@ -102,7 +146,7 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: pendingUser.userId,
-          phone,
+          phone: cleanPhone,
           paymentMethod
         })
       });
@@ -209,9 +253,10 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
               <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Numéro de Téléphone</label>
               <PhoneInput
                 defaultCountry="SN"
-                placeholder="Ex: +221 77 123 45 67"
+                placeholder={country ? `Ex: +${getCountryCallingCode(country)} 77 123 45 67` : "Ex: +221 77 123 45 67"}
                 value={phone}
                 onChange={setPhone}
+                onCountryChange={handleCountryChange}
               />
             </div>
 
@@ -376,9 +421,10 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
                 <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Numéro de Téléphone (Mobile Money)</label>
                 <PhoneInput
                   defaultCountry="SN"
-                  placeholder="Ex: +221 77 123 45 67"
+                  placeholder={country ? `Ex: +${getCountryCallingCode(country)} 77 123 45 67` : "Ex: +221 77 123 45 67"}
                   value={phone}
                   onChange={setPhone}
+                  onCountryChange={handleCountryChange}
                 />
               </div>
             </div>

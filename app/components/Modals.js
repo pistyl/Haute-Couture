@@ -1,14 +1,43 @@
 import React, { useState } from 'react';
 import Icon from './Icons';
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import PhoneInput, { isValidPhoneNumber, parsePhoneNumber, getCountryCallingCode } from 'react-phone-number-input';
 import SearchableSelect from './SearchableSelect';
 
 // --- CLIENT MODAL (ADD / EDIT) ---
 export function ClientModal({ client, onClose, onSave }) {
+  const parsed = client?.phone ? parsePhoneNumber(client.phone) : null;
+  const initialCountry = parsed ? parsed.country : "SN";
+
   const [name, setName] = useState(client ? client.name : "");
-  const [phone, setPhone] = useState(client ? client.phone : "");
+  const [country, setCountry] = useState(initialCountry);
+  const [phone, setPhone] = useState(client?.phone ? client.phone : `+${getCountryCallingCode(initialCountry)}`);
   const [notes, setNotes] = useState(client ? client.notes : "");
   const [phoneError, setPhoneError] = useState("");
+
+  const handleCountryChange = (newCountry) => {
+    if (!newCountry) return;
+    setCountry(newCountry);
+    
+    try {
+      const callingCode = getCountryCallingCode(newCountry);
+      const newPrefix = `+${callingCode}`;
+      
+      if (!phone) {
+        setPhone(newPrefix);
+        return;
+      }
+      
+      const match = phone.match(/^\+(\d+)/);
+      if (match) {
+        const currentCallingCode = match[1];
+        setPhone(phone.replace(`+${currentCallingCode}`, newPrefix));
+      } else {
+        setPhone(newPrefix + phone);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
   
   const [measurements, setMeasurements] = useState(client ? (client.measurements || {}) : {
     poitrine: 0, taille: 0, hanches: 0, epaules: 0, manches: 0,
@@ -26,7 +55,18 @@ export function ClientModal({ client, onClose, onSave }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-    if (phone && !isValidPhoneNumber(phone)) {
+
+    let finalPhone = phone;
+    if (phone) {
+      try {
+        const callingCode = country ? getCountryCallingCode(country) : "";
+        if (phone.trim() === `+${callingCode}`) {
+          finalPhone = "";
+        }
+      } catch (err) {}
+    }
+
+    if (finalPhone && !isValidPhoneNumber(finalPhone)) {
       setPhoneError("Numéro de téléphone invalide.");
       return;
     }
@@ -34,7 +74,7 @@ export function ClientModal({ client, onClose, onSave }) {
     onSave({
       id: client?.id,
       name,
-      phone,
+      phone: finalPhone,
       notes,
       measurements
     });
@@ -70,9 +110,10 @@ export function ClientModal({ client, onClose, onSave }) {
               <label className="text-xs font-mono text-gray-400">Téléphone de contact :</label>
               <PhoneInput
                 defaultCountry="SN"
-                placeholder="Ex: +221 77 123 45 67"
+                placeholder={country ? `Ex: +${getCountryCallingCode(country)} 77 123 45 67` : "Ex: +221 77 123 45 67"}
                 value={phone}
                 onChange={setPhone}
+                onCountryChange={handleCountryChange}
               />
               {phoneError && (
                 <p className="text-rougeSenegal-light text-[11px] font-mono mt-1">{phoneError}</p>
