@@ -896,17 +896,18 @@ export default function Home() {
           href="https://wa.me/221775849570?text=Bonjour%20Atelier%20Baobab%2C%20j'ai%20besoin%20d'assistance."
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-40 bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center group"
+          className="fixed bottom-6 right-6 z-40 bg-gradient-to-tr from-[#128C7E] via-[#25D366] to-[#34E0A1] text-white p-3.5 rounded-full shadow-[0_8px_30px_rgba(37,211,102,0.4)] hover:shadow-[0_8px_30px_rgba(37,211,102,0.6)] transition-all duration-300 transform hover:scale-110 flex items-center justify-center group"
           title="Discuter sur WhatsApp"
         >
+          <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-30 animate-ping pointer-events-none group-hover:opacity-0 transition-opacity" />
           <svg
-            className="w-6 h-6 fill-current"
+            className="w-6 h-6 fill-current relative z-10"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.97C16.528 2.017 14.077 1 11.72 1c-5.447 0-9.873 4.372-9.877 9.802-.001 1.768.467 3.49 1.358 5.011l-.989 3.618 3.734-.967zm12.338-7.37c-.328-.163-1.94-.945-2.241-1.053-.301-.11-.52-.163-.739.163-.22.329-.85.105-1.04.105-.19-.11-.383-.163-.711-.327-1.107-.573-1.926-1.127-2.63-2.316-.182-.309-.182-.477-.02-.635.147-.143.328-.383.493-.574.165-.19.22-.328.328-.546.11-.219.055-.41-.027-.574-.082-.164-.739-1.748-1.013-2.427-.267-.648-.561-.561-.739-.57l-.626-.011c-.22 0-.575.082-.876.41-.301.328-1.15 1.12-1.15 2.733 0 1.613 1.177 3.17 1.338 3.39.164.219 2.31 3.513 5.596 4.927.781.337 1.39.538 1.86.687.787.248 1.503.213 2.068.129.632-.093 1.94-.783 2.213-1.54.274-.757.274-1.404.192-1.54-.082-.136-.301-.218-.629-.381z" />
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.46h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
           </svg>
-          <span className="absolute right-14 bg-charcoal text-cream font-mono text-[10px] tracking-wider py-1.5 px-3 rounded shadow-xl border border-charcoal-light opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+          <span className="absolute right-16 bg-charcoal/95 backdrop-blur-md text-brass font-sans text-xs font-semibold py-2 px-3.5 rounded-lg shadow-2xl border border-brass/25 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap">
             💬 Support WhatsApp
           </span>
         </a>
@@ -1330,17 +1331,18 @@ export default function Home() {
         href="https://wa.me/221775849570?text=Bonjour%20Atelier%20Baobab%2C%20j'ai%20besoin%20d'assistance."
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-40 bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center group"
+        className="fixed bottom-6 right-6 z-40 bg-gradient-to-tr from-[#128C7E] via-[#25D366] to-[#34E0A1] text-white p-3.5 rounded-full shadow-[0_8px_30px_rgba(37,211,102,0.4)] hover:shadow-[0_8px_30px_rgba(37,211,102,0.6)] transition-all duration-300 transform hover:scale-110 flex items-center justify-center group"
         title="Discuter sur WhatsApp"
       >
+        <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-30 animate-ping pointer-events-none group-hover:opacity-0 transition-opacity" />
         <svg
-          className="w-6 h-6 fill-current"
+          className="w-6 h-6 fill-current relative z-10"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.97C16.528 2.017 14.077 1 11.72 1c-5.447 0-9.873 4.372-9.877 9.802-.001 1.768.467 3.49 1.358 5.011l-.989 3.618 3.734-.967zm12.338-7.37c-.328-.163-1.94-.945-2.241-1.053-.301-.11-.52-.163-.739.163-.22.329-.85.105-1.04.105-.19-.11-.383-.163-.711-.327-1.107-.573-1.926-1.127-2.63-2.316-.182-.309-.182-.477-.02-.635.147-.143.328-.383.493-.574.165-.19.22-.328.328-.546.11-.219.055-.41-.027-.574-.082-.164-.739-1.748-1.013-2.427-.267-.648-.561-.561-.739-.57l-.626-.011c-.22 0-.575.082-.876.41-.301.328-1.15 1.12-1.15 2.733 0 1.613 1.177 3.17 1.338 3.39.164.219 2.31 3.513 5.596 4.927.781.337 1.39.538 1.86.687.787.248 1.503.213 2.068.129.632-.093 1.94-.783 2.213-1.54.274-.757.274-1.404.192-1.54-.082-.136-.301-.218-.629-.381z" />
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.46h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
         </svg>
-        <span className="absolute right-14 bg-charcoal text-cream font-mono text-[10px] tracking-wider py-1.5 px-3 rounded shadow-xl border border-charcoal-light opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+        <span className="absolute right-16 bg-charcoal/95 backdrop-blur-md text-brass font-sans text-xs font-semibold py-2 px-3.5 rounded-lg shadow-2xl border border-brass/25 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap">
           💬 Support WhatsApp
         </span>
       </a>
