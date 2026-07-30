@@ -11,6 +11,11 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata = {
   title: "Haute Couture - créer, gérer et livrer",
   description: "Système de suivi et gestion de commandes d'inspiration sénégalaise. Fiches clients, mesures, broderies d'or, basin, wax, facturation et gestion de stock.",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.ico',
+    apple: '/icon-192x192.png',
+  }
 };
 
 export default function RootLayout({ children }) {
