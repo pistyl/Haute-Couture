@@ -294,6 +294,9 @@ function GarmentPreview({ type, poitrine, epaules, hauteur }) {
 }
 
 export default function LandingPage({ onStartAuth, onStartRegister }) {
+  // --- STATE FOR MOBILE MENU ---
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // --- STATE FOR FABRIC CALCULATOR ---
   const [selectedGarment, setSelectedGarment] = useState("boubou");
   const [calcMeasurements, setCalcMeasurements] = useState({
@@ -451,7 +454,9 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
               <p className="font-mono text-[8px] uppercase tracking-widest text-brass opacity-60"></p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-4">
             <button
               onClick={onStartAuth}
               className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
@@ -465,7 +470,60 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
               Créer mon Atelier
             </button>
           </div>
+
+          {/* Mobile Hamburger Button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-brass hover:text-brass-light p-2 focus:outline-none transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <Icon name="close" className="w-6 h-6" />
+              ) : (
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-20 left-0 w-full bg-charcoal-dark/95 backdrop-blur-lg border-b border-charcoal-light z-30 transition-all duration-300 ease-in-out">
+            <div className="px-4 py-6 space-y-4 flex flex-col">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onStartAuth();
+                }}
+                className="w-full text-center text-gray-300 hover:text-white py-3 px-4 rounded-lg border border-charcoal-light bg-charcoal-light/10 hover:bg-charcoal-light/20 transition-all text-base font-medium"
+              >
+                Se connecter
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onStartRegister();
+                }}
+                className="w-full text-center bg-brass hover:bg-brass-light text-charcoal py-3 px-4 rounded-lg text-base font-bold transition-all shadow-lg hover:shadow-brass/25 active:scale-98"
+              >
+                Créer mon Atelier
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* HERO SECTION */}
