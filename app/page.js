@@ -228,6 +228,7 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("FREE");
+  const [authMode, setAuthMode] = useState("login");
   const [data, setData] = useState({
     config: { nomAtelier: "Chargement...", devise: "FCFA" },
     employees: [],
@@ -880,6 +881,7 @@ export default function Home() {
       return (
         <LoginView 
           initialPlan={selectedPlan}
+          initialRegister={authMode === "register"}
           onLoginSuccess={(u) => setUser(u)} 
           onBack={() => setShowAuth(false)} 
         />
@@ -888,8 +890,13 @@ export default function Home() {
     return (
       <>
         <LandingPage 
-          onStartAuth={() => { setSelectedPlan("FREE"); setShowAuth(true); }} 
-          onStartRegister={(plan) => { setSelectedPlan(plan || "FREE"); setShowAuth(true); }} 
+          onStartAuth={() => { setSelectedPlan("FREE"); setAuthMode("login"); setShowAuth(true); }} 
+          onStartRegister={(plan) => {
+            const p = (typeof plan === 'string' && plan) ? plan : "FREE";
+            setSelectedPlan(p);
+            setAuthMode("register");
+            setShowAuth(true);
+          }} 
         />
         {/* ================= WHATSAPP SUPPORT FLOAT BUTTON ================= */}
         <a

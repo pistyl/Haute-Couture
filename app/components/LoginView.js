@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PhoneInput, { isValidPhoneNumber, getCountryCallingCode } from 'react-phone-number-input';
 
-export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack }) {
-  const [isRegister, setIsRegister] = useState(false);
+export default function LoginView({ initialPlan = "FREE", initialRegister = false, onLoginSuccess, onBack }) {
+  const [isRegister, setIsRegister] = useState(initialRegister);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [atelierName, setAtelierName] = useState("");
@@ -56,11 +56,12 @@ export default function LoginView({ initialPlan = "FREE", onLoginSuccess, onBack
   useEffect(() => {
     if (initialPlan) {
       setPlan(initialPlan);
-      if (initialPlan !== "FREE") {
-        setIsRegister(true);
-      }
     }
   }, [initialPlan]);
+
+  useEffect(() => {
+    setIsRegister(initialRegister);
+  }, [initialRegister]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

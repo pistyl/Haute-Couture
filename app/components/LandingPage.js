@@ -464,7 +464,7 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
               Se connecter
             </button>
             <button
-              onClick={onStartRegister}
+              onClick={() => onStartRegister("FREE")}
               className="bg-brass hover:bg-brass-light text-charcoal px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg hover:shadow-brass/20 scale-100 hover:scale-102"
             >
               Créer mon Atelier
@@ -544,7 +544,7 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
             <button
-              onClick={onStartRegister}
+              onClick={() => onStartRegister("FREE")}
               className="w-full sm:w-auto bg-brass hover:bg-brass-light text-charcoal px-8 py-4 rounded-xl text-base font-bold transition-all shadow-xl hover:shadow-brass/25 hover:scale-103 text-center"
             >
               Commencer l'Essai Gratuit (14j)
@@ -1299,7 +1299,7 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
               {/* Bottom CTA to trigger registration inside mockup */}
               <div className="border-t border-charcoal-light pt-6 mt-6 flex justify-end">
                 <button
-                  onClick={onStartRegister}
+                  onClick={() => onStartRegister("FREE")}
                   className="bg-brass text-charcoal hover:bg-brass-light font-bold text-xs px-4 py-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow"
                 >
                   <span>Créer mon compte pour configurer mes fiches</span>
