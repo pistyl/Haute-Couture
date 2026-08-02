@@ -1324,7 +1324,7 @@ export default function LandingPage({ onStartAuth, onStartRegister }) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-md lg:max-w-5xl mx-auto">
             {/* PLAN 1: Free Trial */}
             <div className="border border-charcoal-light bg-charcoal/40 rounded-2xl p-8 flex flex-col justify-between hover:border-brass/20 transition-all">
               <div className="space-y-6 text-left">
